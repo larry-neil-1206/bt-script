@@ -1,46 +1,56 @@
 import bittensor as bt
-
-subtensor = bt.subtensor("finney")
+import threading
 import requests
 import re
 
+NETWORK = "finney"
+#NETWORK = "ws://161.97.128.68:9944"
+subtensor = bt.subtensor(NETWORK)
+
 def load_bots_from_gdoc():
-    """
-    Loads the list of bot addresses from the Google Doc.
-    Returns a list of addresses.
-    """
-    # The Google Doc's "export?format=txt" endpoint gives plain text
     url = "https://docs.google.com/document/d/1Vdm20cXVAK-kjgjBw9XcbVYaAvvCWyY8IuPLAE2aRBI/export?format=txt"
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
         text = response.text
-        # Find all Substrate addresses (start with 5, 48 chars, base58)
-        # This regex matches addresses starting with 5 and 47 more base58 chars
         bots = re.findall(r'5[1-9A-HJ-NP-Za-km-z]{47}', text)
         return bots
     except Exception as e:
         print(f"Failed to load bots from Google Doc: {e}")
-        # Fallback to empty list or optionally a hardcoded list
         return []
-import threading
 
 def refresh_bots_periodically(interval_minutes=20):
     global bots
     bots = load_bots_from_gdoc()
     threading.Timer(interval_minutes * 60, refresh_bots_periodically, [interval_minutes]).start()
 
-# Initial load and start periodic refresh
+
 refresh_bots_periodically()
+
+
+def get_owner_coldkeys():
+    subtensor = bt.subtensor("finney")
+    subnet_infos = subtensor.all_subnets()
+    return [subnet_info.owner_coldkey for subnet_info in subnet_infos]
+
+def refresh_owner_coldkeys_periodically(interval_minutes=20):
+    global owner_coldkeys
+    owner_coldkeys = get_owner_coldkeys()
+    threading.Timer(interval_minutes * 60, refresh_owner_coldkeys_periodically, [interval_minutes]).start()
+
+refresh_owner_coldkeys_periodically()
 
 
 def get_coldkey_display_name(coldkey):
     if coldkey is None:
         return "Unknown"
-
+    owner_color = "\033[93m"
     color = "\033[94m"
     reset = "\033[0m"
-    
+
+    if coldkey in owner_coldkeys:
+        return coldkey + f"{owner_color} (owner{owner_coldkeys.index(coldkey)}){reset}"
+
     if coldkey in bots:
         return coldkey + f"{color} (bot{bots.index(coldkey)+1}){reset}"
     else:
