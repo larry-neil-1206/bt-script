@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Multisig script for creating blockchain transfer and proxy proposals.
 """
