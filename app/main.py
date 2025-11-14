@@ -21,6 +21,10 @@ app.include_router(router)
 templates = Jinja2Templates(directory="app/templates")
 
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
 @app.get("/")
 def read_root(request: fastapi.Request, username: str = Depends(get_current_username)):
     subtensor = stake_service.subtensor
