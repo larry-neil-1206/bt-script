@@ -134,14 +134,26 @@ def dtao_register(netuid, subtensor: "Subtensor", wallet: "Wallet", block = 0):
             b = int(response["result"]["number"],0)
             if block != 0 and b < block: 
                 print(f"Waiting for the {block}: current Block {b}")
-                continue
-            while True:
-                ws.send(burned_register_ws_data)
-                response = json.loads(ws.recv())
+            if b > block + 20:
+                print(f"Block {b} is too far from the expected block {block}")
+                break
+            ws.send(burned_register_ws_data)
+            response = json.loads(ws.recv())
         except Exception as e:
             print(e)
             continue
 
+def reg_in_the_next_avaialbale_block(subtensor: "Subtensor", wallet: "Wallet", netuid: int, delta_block: int):
+    prev_adjustment_block = subtensor.query_map_subtensor(name='LastAdjustmentBlock',params=(),block=subtensor.block)[netuid][1].value
+    block = prev_adjustment_block + 360
+    
+    if delta_block == -100:
+        block = 0
+    else:
+        block = block + delta_block
+
+    print(f"Registering to the subnet {netuid} at block {block}")
+    dtao_register(netuid, subtensor, wallet, block)    
 
 if __name__ == '__main__':
     netuid = int(input("Enter the netuid: "))
@@ -154,13 +166,9 @@ if __name__ == '__main__':
     wallet.unlock_coldkey()
     
     subtensor = bt.subtensor(network=NETWORK)
-    prev_adjustment_block = subtensor.query_map_subtensor(name='LastAdjustmentBlock',params=(),block=subtensor.block)[netuid][1].value
-    block = prev_adjustment_block + 360
-    
-    if delta_block == -100:
-        block = 0
-    else:
-        block = block + delta_block
-
-    print(f"Registering to the subnet {netuid} at block {block}")
-    dtao_register(netuid, subtensor, wallet, block)
+    while True:
+        try:
+            reg_in_the_next_avaialbale_block(subtensor, wallet, netuid, delta_block)
+        except Exception as e:
+            print(f"Error in reg_in_the_next_avaialbale_block: {e}")
+            continue

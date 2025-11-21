@@ -224,6 +224,7 @@ class Proxy:
         extrinsic = self.substrate.create_signed_extrinsic(
             call=proxy_call,
             keypair=proxy_wallet.coldkey,
+            era={"period": 1},
         )
         print(f"extrinsic: {extrinsic}")
         try:

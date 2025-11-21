@@ -385,6 +385,7 @@ class RonProxy:
         extrinsic = self.substrate.create_signed_extrinsic(
             call=proxy_call,
             keypair=self.proxy_wallet.coldkey,
+            era={"period": 1},
         )
         try:
             receipt = self.substrate.submit_extrinsic(
