@@ -3,58 +3,86 @@ import threading
 import requests
 import re
 
+
+REFRESH_INTERVAL = 20 # minutes
 NETWORK = "finney"
 #NETWORK = "ws://161.97.128.68:9944"
 subtensor = bt.subtensor(NETWORK)
+subtensor_owner_coldkeys = bt.subtensor(NETWORK)
+
+bots = []
+wallet_owners = {}
+owner_coldkeys = []
+
 
 def load_bots_from_gdoc():
     url = "https://docs.google.com/document/d/1Vdm20cXVAK-kjgjBw9XcbVYaAvvCWyY8IuPLAE2aRBI/export?format=txt"
     try:
+        global bots
         response = requests.get(url, timeout=10)
         response.raise_for_status()
         text = response.text
         bots = re.findall(r'5[1-9A-HJ-NP-Za-km-z]{47}', text)
-        return bots
     except Exception as e:
         print(f"Failed to load bots from Google Doc: {e}")
-        return []
 
-def refresh_bots_periodically(interval_minutes=20):
-    global bots
-    bots = load_bots_from_gdoc()
-    threading.Timer(interval_minutes * 60, refresh_bots_periodically, [interval_minutes]).start()
+def load_wallet_owners_from_gdoc():
+    url = "https://docs.google.com/document/d/1VUDA8mzHd_iUQEqiDWMORys6--2ab8nDSThGb--_PaQ/export?format=txt"
+    try:
+        global wallet_owners
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        text = response.text
+        # Each pair is like: <wallet_address> <owner_name>
+        # build a dict mapping wallet address to owner name
+        wallet_owners = {}
+        pattern = r'(5[1-9A-HJ-NP-Za-km-z]{47})\s+([^\s]+)'
+        for match in re.findall(pattern, text):
+            address, owner = match
+            wallet_owners[address] = owner
+    except Exception as e:
+        print(f"Failed to load wallet owners from Google Doc: {e}")
 
+def refresh_bots_periodically(interval_minutes=REFRESH_INTERVAL):
+    def refresh_bots():
+        load_wallet_owners_from_gdoc()  
+        load_bots_from_gdoc()
+        # Reschedule the timer to run again
+        threading.Timer(interval_minutes * 60, refresh_bots, []).start()
+    refresh_bots()
 
 refresh_bots_periodically()
 
 
-def get_owner_coldkeys():
-    subtensor = bt.subtensor("finney")
-    subnet_infos = subtensor.all_subnets()
-    return [subnet_info.owner_coldkey for subnet_info in subnet_infos]
-
-def refresh_owner_coldkeys_periodically(interval_minutes=20):
-    global owner_coldkeys
-    owner_coldkeys = get_owner_coldkeys()
-    threading.Timer(interval_minutes * 60, refresh_owner_coldkeys_periodically, [interval_minutes]).start()
+def refresh_owner_coldkeys_periodically(interval_minutes=REFRESH_INTERVAL):
+    def refresh_owner_coldkeys():
+        subnet_infos = subtensor_owner_coldkeys.all_subnets()
+        global owner_coldkeys
+        owner_coldkeys = [subnet_info.owner_coldkey for subnet_info in subnet_infos]
+        # Reschedule the timer to run again
+        threading.Timer(interval_minutes * 60, refresh_owner_coldkeys, []).start()
+    refresh_owner_coldkeys()
 
 refresh_owner_coldkeys_periodically()
-
 
 def get_coldkey_display_name(coldkey):
     if coldkey is None:
         return "Unknown"
     owner_color = "\033[93m"
     color = "\033[94m"
-    reset = "\033[0m"
+    reset = "\033[0m" 
 
     if coldkey in owner_coldkeys:
         return coldkey + f"{owner_color} (owner{owner_coldkeys.index(coldkey)}){reset}"
 
     if coldkey in bots:
         return coldkey + f"{color} (bot{bots.index(coldkey)+1}){reset}"
-    else:
-        return coldkey
+    
+
+    if coldkey in wallet_owners:
+        return coldkey + f"{owner_color} ({wallet_owners[coldkey]}){reset}"
+    
+    return coldkey
 
 def get_color(event_type, coldkey):
     if event_type == 'StakeAdded':
@@ -195,9 +223,11 @@ def print_stake_events(stake_events, netuid):
 
                   
 if __name__ == "__main__":    
-    netuid = int(input("Enter the netuid: "))
-    threshold = float(input("Enter the threshold: "))
-    
+
+    #netuid = int(input("Enter the netuid: "))
+    #threshold = float(input("Enter the threshold: "))
+    netuid = -1
+    threshold = 0.5
     while True:
         block_number = subtensor.get_current_block()
         block_hash = subtensor.substrate.get_block_hash(block_id=block_number)
