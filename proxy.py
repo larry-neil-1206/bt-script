@@ -48,6 +48,7 @@ def create_parser() -> argparse.ArgumentParser:
     register_parser = subparsers.add_parser('register', help='Burned register')
     register_parser.add_argument('--netuid', type=int, required=True, help='Subnet ID')
     register_parser.add_argument('--hotkey', type=str, required=True, help='Hotkey address')
+    register_parser.add_argument('--name', type=str, default=".env", help='Specify the environment')
 
     # Balance transfer command
     transfer_parser = subparsers.add_parser('transfer', help='Transfer balance between hotkeys')
@@ -143,6 +144,7 @@ def main():
         sys.exit(1)
     
     args = parser.parse_args()
+    # env_file = ".env"
     if args.name == ".env":
         env_file = f".env"
     elif args.name == "webgenie":

@@ -26,7 +26,7 @@ def sign_extrinsic(
     wallet: "Wallet",
     sign_with: str = "coldkey",
     use_nonce: bool = False,
-    period: Optional[int] = 1,
+    period: Optional[int] = None,
     nonce_key: str = "hotkey",
 ) -> GenericExtrinsic:
     """
