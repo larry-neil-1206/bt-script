@@ -19,6 +19,7 @@ class Settings(BaseModel):
     DEFAULT_MIN_TOLERANCE: bool = False
     DEFAULT_RETRIES: int = 1
     DEFAULT_DEST_HOTKEY: str = ROUND_TABLE_HOTKEY
+    USE_ERA: bool = os.getenv("USE_ERA", "true").lower() == "true"
     
     # WALLET_NAMES: List[str] = os.getenv("WALLET_NAMES", "").split(",")
     # DELEGATORS: List[str] = os.getenv("DELEGATORS", "").split(",")
@@ -28,3 +29,5 @@ class Settings(BaseModel):
     ADMIN_HASH: str = "$2b$12$rFj2f8j0jphOUMy3ZMjfdO9wQedLq7zSHmsjYDOU9zZkULYkdfMj2"
 
 settings = Settings()
+
+print(f"USE_ERA: {settings.USE_ERA}")

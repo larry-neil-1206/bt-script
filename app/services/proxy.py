@@ -4,18 +4,17 @@ from substrateinterface.exceptions import SubstrateRequestException
 from typing import Optional, cast
 from bittensor.utils.balance import Balance, FixedPoint, fixed_to_float
 
-
 class Proxy:
-    def __init__(self, network: str):
+    def __init__(self, network: str, use_era: bool = True):
         """
         Initialize the RonProxy object.
         
         Args:
-            proxy_wallet: Proxy wallet address
             network: Network name
-            delegator: Delegator address
+            use_era: Whether to use era parameter in extrinsic creation
         """
         self.network = network
+        self.use_era = use_era
         self.subtensor = bt.subtensor(network=network)
         
 
@@ -221,11 +220,17 @@ class Proxy:
                 'call': call,
             }
         )
-        extrinsic = self.substrate.create_signed_extrinsic(
-            call=proxy_call,
-            keypair=proxy_wallet.coldkey,
-            era={"period": 1},
-        )
+        if self.use_era:
+            extrinsic = self.substrate.create_signed_extrinsic(
+                call=proxy_call,
+                keypair=proxy_wallet.coldkey,
+                era={"period": 1},
+            )
+        else:
+            extrinsic = self.substrate.create_signed_extrinsic(
+                call=proxy_call,
+                keypair=proxy_wallet.coldkey,
+            )
         print(f"extrinsic: {extrinsic}")
         try:
             receipt = self.substrate.submit_extrinsic(
