@@ -467,9 +467,9 @@
 
             // Add confirmation dialog
             const confirmMessage = `Are you sure you want to stake ${amount} TAO from wallet "${walletName}" to validator "${validatorHotkey}" on network ${netuid}?`;
-            if (!confirm(confirmMessage)) {
-                return;
-            }
+            //if (!confirm(confirmMessage)) {
+            //    return;
+            //}
 
             try {
                 setButtonLoading(button, true);
@@ -507,9 +507,9 @@
             // Add confirmation dialog
             const amountText = amount ? `${amount} TAO` : 'all TAO';
             const confirmMessage = `Are you sure you want to unstake ${amountText} from wallet "${walletName}" from validator "${validatorHotkey}" on network ${netuid}?`;
-            if (!confirm(confirmMessage)) {
-                return;
-            }
+            //if (!confirm(confirmMessage)) {
+            //    return;
+            //}
 
             try {
                 setButtonLoading(button, true);
@@ -548,7 +548,7 @@
 
             const amountText = amount ? `${amount} ALPHA` : 'all ALPHA';
             const confirmMessage = `Are you sure you want to move ${amountText} from validator "${originHotkey}" (net ${originNetuid}) to validator "${destinationHotkey}" (net ${destinationNetuid}) using wallet "${walletName}"?`;
-            if (!confirm(confirmMessage)) return;
+            //if (!confirm(confirmMessage)) return;
 
             try {
                 setButtonLoading(button, true);
