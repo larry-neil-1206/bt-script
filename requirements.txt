@@ -2,3 +2,4 @@ bittensor
 substrate-interface
 python-dotenv
 bcrypt
+bittensor-cli
