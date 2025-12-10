@@ -147,32 +147,8 @@ def main():
     # env_file = ".env"
     if args.name == ".env":
         env_file = f".env"
-    elif args.name == "webgenie":
-        env_file = f".env.vlad.webgenie" 
-    elif args.name == "green":
-        env_file = f".env.vlad.newgreen" 
-    elif args.name == "black":
-        env_file = f".env.vlad.newblack" 
-    elif args.name == "breo":
-        env_file = f".env.breo.newbreo" 
-    elif args.name == "kb":
-        env_file = f".env.breo.newkb" 
-    elif args.name == "tck":
-        env_file = f".env.breo.tck" 
-    elif args.name == "lazyterry":
-        env_file = f".env.thunder.lazyterry" 
-    elif args.name == "const":
-        env_file = f".env.druid.const" 
-    elif args.name == "taomind":
-        env_file = f".env.druid.taomind" 
-    elif args.name == "terry":
-        env_file = f".env.druid.terry" 
-    elif args.name == "gang":
-        env_file = f".env.sky.gang" 
-    elif args.name == "izo":
-        env_file = f".env.sky.izo" 
-    elif args.name == "sky":
-        env_file = f".env.sky.sky" 
+    elif args.name == "leo":
+        env_file = f".env.leo"
 
     print(f"Env file: {env_file}")
 
