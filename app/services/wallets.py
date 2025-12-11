@@ -2,13 +2,13 @@ import bittensor as bt
 from typing import Dict, Tuple
 from app.core.config import settings
 
-wallets: Dict[str, Tuple[bt.wallet, str]] = {}
+wallets: Dict[str, Tuple[bt.Wallet, str]] = {}
 
 
 def unlock_wallets():
     print(settings.WALLET_NAMES)
     for wallet_name in settings.WALLET_NAMES:
-        wallet = bt.wallet(name=wallet_name)
+        wallet = bt.Wallet(name=wallet_name)
         print(f"Unlocking wallet {wallet_name}")
         retries = 3
         for _ in range(retries):

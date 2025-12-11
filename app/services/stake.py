@@ -13,7 +13,7 @@ class StakeService:
     stake/unstake operations with retry mechanisms, and error handling.
     """
     
-    def __init__(self, wallets: Dict[str, Tuple[bt.wallet, str]]):
+    def __init__(self, wallets: Dict[str, Tuple[bt.Wallet, str]]):
         """
         Initialize the StakeService with wallets and proxy instance.
         
@@ -23,7 +23,7 @@ class StakeService:
         """
         self.wallets = wallets
         self.proxy = Proxy(settings.NETWORK, use_era=settings.USE_ERA)
-        self.subtensor = bt.subtensor(network=settings.NETWORK)
+        self.subtensor = bt.Subtensor(network=settings.NETWORK)
     
     def get_stake_min_tolerance(self, tao_amount: float, netuid: int) -> float:
         """

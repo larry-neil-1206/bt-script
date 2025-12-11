@@ -19,10 +19,10 @@ from utils.index import get_sn_price
 if __name__ == '__main__':
     
     wallet_name = 'leo' # input("Enter the wallet name: ")
-    wallet = bt.wallet(name=wallet_name)
+    wallet = bt.Wallet(name=wallet_name)
     wallet.unlock_coldkey()
     
-    subtensor = bt.subtensor(network=NETWORK)
+    subtensor = bt.Subtensor(network=NETWORK)
     netuid = int(input("Enter the netuid: "))
     sn_price = get_sn_price(subtensor, netuid)
     logger.info(f"Subnet price for netuid {netuid}: {sn_price} TAO per alpha")

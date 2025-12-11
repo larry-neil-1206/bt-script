@@ -62,7 +62,7 @@ def get_stake_list(subtensor, wallet_ss58):
     
 
 if __name__ == "__main__":
-    subtensor = bt.subtensor("finney")
+    subtensor = bt.Subtensor("finney")
     wallet_ss58 = "5F5WLLEzDBXQDdTzDYgbQ3d3JKbM15HhPdFuLMmuzcUW5xG2"
     stake_list = get_stake_list(subtensor, wallet_ss58)    
     print(stake_list)

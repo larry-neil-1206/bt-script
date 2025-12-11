@@ -22,7 +22,7 @@ DELEGATORS: List[str] = ["5DZhYqgHhRPYUHqjaU2gS2LNL7VS8Fb5utxZ7QEkVGqTnmh5","5FW
 if __name__ == '__main__':
     
     wallet_name = 'leo' # input("Enter the wallet name: ")
-    wallet = bt.wallet(name=wallet_name)
+    wallet = bt.Wallet(name=wallet_name)
     wallet.unlock_coldkey()
     
     netuid = int(input("Enter the netuid: "))
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     dest_hotkey = ROUND_TABLE_HOTKEY
     tolerance = float(input("Enter the tolerance: "))
 
-    subtensor = bt.subtensor(network=settings.NETWORK)
+    subtensor = bt.Subtensor(network=settings.NETWORK)
     
     proxy = Proxy(network=settings.NETWORK)
     proxy.init_runtime()

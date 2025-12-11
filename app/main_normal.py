@@ -22,11 +22,11 @@ app = fastapi.FastAPI()
 templates = Jinja2Templates(directory="app/templates")
 
 wallet_names = ["green"]
-wallets: Dict[str, bt.wallet] = {}
+wallets: Dict[str, bt.Wallet] = {}
 
 def unlock_wallets():
     for wallet_name in wallet_names:
-        wallet = bt.wallet(name=wallet_name)
+        wallet = bt.Wallet(name=wallet_name)
         print(f"Unlocking wallet {wallet_name}")
         retries = 3
         for _ in range(retries):
@@ -44,7 +44,7 @@ unlock_wallets()
 @app.get("/")
 def read_root(request: fastapi.Request, username: str = Depends(get_current_username)):
     try:
-        subtensor = bt.subtensor(network=NETWORK)
+        subtensor = bt.Subtensor(network=NETWORK)
         def get_balance_html():
             balance_html = ""
             for wallet_name in wallet_names:
@@ -82,7 +82,7 @@ def stake(
         retries = 1
     result = None
     wallet = wallets[wallet_name]
-    subtensor = bt.subtensor(network=NETWORK)
+    subtensor = bt.Subtensor(network=NETWORK)
 
     while retries > 0:
         try:
@@ -126,7 +126,7 @@ def unstake(
         retries = 1
     result = None
     wallet = wallets[wallet_name]
-    subtensor = bt.subtensor(network=NETWORK)
+    subtensor = bt.Subtensor(network=NETWORK)
     subnet = subtensor.subnet(netuid=netuid)
 
     if amount is None:

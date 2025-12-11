@@ -7,8 +7,8 @@ import re
 REFRESH_INTERVAL = 20 # minutes
 NETWORK = "finney"
 #NETWORK = "ws://161.97.128.68:9944"
-subtensor = bt.subtensor(NETWORK)
-subtensor_owner_coldkeys = bt.subtensor(NETWORK)
+subtensor = bt.Subtensor(NETWORK)
+subtensor_owner_coldkeys = bt.Subtensor(NETWORK)
 
 bots = []
 wallet_owners = {}

@@ -3,7 +3,7 @@ import os
 import time
 
 # Add the parent directory to the Python search path (sys.path)
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
@@ -15,15 +15,17 @@ from app.core.config import settings
 from app.services.proxy import Proxy
 from utils.logger import logger
 from utils.index import get_sn_price, convert_alpha_to_float
+from modules import LeoProxy
+from bittensor.utils.balance import Balance
 
 if __name__ == '__main__':
     
     dest_hotkey = ROUND_TABLE_HOTKEY
     wallet_name = 'leo' # input("Enter the wallet name: ")
-    wallet = bt.wallet(name=wallet_name)
+    wallet = bt.Wallet(name=wallet_name)
     wallet.unlock_coldkey()
     
-    subtensor = bt.subtensor(network=NETWORK)
+    subtensor = bt.Subtensor(network=NETWORK)
     netuid = int(input("Enter the netuid: "))
     sn_price = get_sn_price(subtensor, netuid)
     logger.info(f"Subnet price for netuid {netuid}: {sn_price} TAO per alpha")
@@ -31,6 +33,8 @@ if __name__ == '__main__':
     user_stake_amount = float(input("Enter the stake amount: "))
     threshold = float(input("Enter the threshold: "))
     tolerance = float(input("Enter the tolerance: "))
+    
+    delegator = '5ESwpyuGxBmkXuQ1J8DqtmhFZQEDzLWKVup9xai567JRhvDN'
 
     try:
         sn_price = get_sn_price(subtensor, netuid)
@@ -47,45 +51,33 @@ if __name__ == '__main__':
 
         while True:
             try:
+                leo_proxy = LeoProxy(
+                    proxy_wallet=wallet,
+                    network=NETWORK,
+                    delegator=delegator,
+                )
                 sn_price = get_sn_price(subtensor, netuid)
                 print(f"SN{netuid} price: {sn_price}, stake_price: {user_stake_price}, unstake_price: {user_unstake_price}, stake_amount: {user_stake_amount}, staked: {staked}")
                 
                 if staked and sn_price > user_unstake_price:
-                    amount = subtensor.get_stake(
-                        coldkey_ss58=wallet.coldkeypub.ss58_address,
-                        hotkey_ss58=dest_hotkey,
-                        netuid=netuid
+                    leo_proxy.remove_stake(
+                        netuid=netuid,
+                        hotkey=dest_hotkey,
+                        amount=Balance.from_tao(0, netuid=netuid),
+                        tolerance=tolerance,
+                        all=True,
                     )
-                    amount = convert_alpha_to_float(amount)
-                    print(f"Unstaking {amount} TAO from SN{netuid}...")
-                    result = subtensor.unstake(
-                        netuid=netuid, 
-                        wallet=wallet, 
-                        amount= amount,
-                        hotkey_ss58=dest_hotkey,
-                        safe_staking=True,
-                        rate_tolerance=tolerance,
-                        period=True
-                    )
-                    if not result:
-                        raise Exception("Unstake failed")
                     print("Unstaked successfully")
                     staked = False
                     sn_price = get_sn_price(subtensor, netuid)
                     user_stake_price = sn_price - threshold    
                 elif not staked and sn_price < user_stake_price:
-                    result = subtensor.add_stake(
+                    leo_proxy.add_stake(
                         netuid=netuid,
-                        amount= bt.Balance.from_tao(user_stake_amount, netuid),
-                        wallet=wallet,
-                        hotkey_ss58=dest_hotkey,
-                        safe_staking=True,
-                        rate_tolerance=tolerance,
-                        period=True
+                        hotkey=dest_hotkey,
+                        amount=Balance.from_tao(user_stake_amount),
+                        tolerance=tolerance,
                     )
-                    if not result:
-                        raise Exception("Stake failed")
-
                     print("Staked successfully")
                     staked = True
                     sn_price = get_sn_price(subtensor, netuid)
@@ -94,6 +86,7 @@ if __name__ == '__main__':
                 
             except Exception as e:
                 logger.error(f"Error: {e}")
+                subtensor.wait_for_block()
                 continue
     except KeyboardInterrupt:
         print("\nExiting...")

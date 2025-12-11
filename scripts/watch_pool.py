@@ -2,7 +2,7 @@ import bittensor as bt
 
 if __name__ == '__main__':
     threshold = int(input("Enter the threshold: "))
-    subtensor = bt.subtensor(network="finney")
+    subtensor = bt.Subtensor(network="finney")
     subnet_infos = subtensor.all_subnets()
     prev_tao_in = [subnet_info.tao_in for subnet_info in subnet_infos]
     while True:

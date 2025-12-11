@@ -19,10 +19,10 @@ from utils.index import get_sn_price, extract_stake_events_from_data
 if __name__ == '__main__':
     
     wallet_name = 'leo' # input("Enter the wallet name: ")
-    wallet = bt.wallet(name=wallet_name)
+    wallet = bt.Wallet(name=wallet_name)
     wallet.unlock_coldkey()
     
-    subtensor = bt.subtensor(network=NETWORK)
+    subtensor = bt.Subtensor(network=NETWORK)
     
     user_stake_amount = float(input("Enter the stake amount: "))
     dest_hotkey = ROUND_TABLE_HOTKEY

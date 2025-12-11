@@ -29,8 +29,8 @@ if __name__ == '__main__':
 
     proxy = Proxy(network=settings.NETWORK)
     proxy.init_runtime()
-    subtensor = bt.subtensor(network=settings.NETWORK)
-    wallet = bt.wallet(name=wallet_name)
+    subtensor = bt.Subtensor(network=settings.NETWORK)
+    wallet = bt.Wallet(name=wallet_name)
     wallet.unlock_coldkey()
 
     amount_balance = subtensor.get_stake(

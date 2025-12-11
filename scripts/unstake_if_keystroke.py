@@ -26,8 +26,8 @@ if __name__ == '__main__':
     dest_hotkey = input("Enter the destination hotkey: ") or ROUND_TABLE_HOTKEY
     tolerance = float(input("Enter the tolerance: "))
 
-    subtensor = bt.subtensor(network=settings.NETWORK)
-    wallet = bt.wallet(name=wallet_name)
+    subtensor = bt.Subtensor(network=settings.NETWORK)
+    wallet = bt.Wallet(name=wallet_name)
     wallet.unlock_coldkey()
     delegator = DELEGATORS[WALLET_NAMES.index(wallet_name)]
     

@@ -6,9 +6,9 @@ if __name__ == '__main__':
     netuid = int(input("Enter the netuid or -1 for all: "))
     wallet_name = input("Enter the wallet name: ")            
 
-    subtensor = bt.subtensor('finney')
+    subtensor = bt.Subtensor('finney')
 
-    wallet = bt.wallet(name=wallet_name)
+    wallet = bt.Wallet(name=wallet_name)
     wallet.unlock_coldkey()
     
     stake_infos = subtensor.get_stake_for_coldkey(

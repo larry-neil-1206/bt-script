@@ -12,7 +12,7 @@ from utils.logger import logger
 
 if __name__ == '__main__':
     netuid = int(input("Enter the netuid: "))
-    subtensor = bt.subtensor(network=NETWORK)
+    subtensor = bt.Subtensor(network=NETWORK)
     prev_tao_in = 0
     while True:
         try:

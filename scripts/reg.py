@@ -162,10 +162,10 @@ if __name__ == '__main__':
     delta_block = int(input("Enter the delta block: "))
 
     # Create a wallet instance
-    wallet = bt.wallet(name=wallet_name, hotkey=hotkey)
+    wallet = bt.Wallet(name=wallet_name, hotkey=hotkey)
     wallet.unlock_coldkey()
     
-    subtensor = bt.subtensor(network=NETWORK)
+    subtensor = bt.Subtensor(network=NETWORK)
     while True:
         try:
             reg_in_the_next_avaialbale_block(subtensor, wallet, netuid, delta_block)

@@ -9,13 +9,13 @@ if __name__ == '__main__':
     netuid = int(input("Enter the netuid: "))
     threshold = float(input("Enter the threshold price (in TAO): "))
 
-    subtensor = bt.subtensor(network="finney")
+    subtensor = bt.Subtensor(network="finney")
     subnet = subtensor.subnet(netuid=netuid)
     alpha_price = subnet.alpha_to_tao(1)
     print(f"Current alpha token price: {alpha_price} TAO")
 
     wallet_name = input("Enter the wallet name: ")            
-    wallet = bt.wallet(name=wallet_name)
+    wallet = bt.Wallet(name=wallet_name)
     wallet.unlock_coldkey()
     dest_hotkey = input("Enter the destination hotkey (default is Round table): ") or ROUND_TABLE_HOTKEY
     
