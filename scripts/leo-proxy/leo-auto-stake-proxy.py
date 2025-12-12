@@ -33,6 +33,7 @@ if __name__ == '__main__':
     user_stake_amount = float(input("Enter the stake amount: "))
     threshold = float(input("Enter the threshold: "))
     tolerance = float(input("Enter the tolerance: "))
+    repeat_cnt = int(input("Enter the number of repeats: "))
     
     delegator = '5ESwpyuGxBmkXuQ1J8DqtmhFZQEDzLWKVup9xai567JRhvDN'
 
@@ -49,7 +50,7 @@ if __name__ == '__main__':
             user_stake_price = sn_price - threshold
             staked = False
 
-        while True:
+        while repeat_cnt != 0:
             try:
                 leo_proxy = LeoProxy(
                     proxy_wallet=wallet,
@@ -69,6 +70,7 @@ if __name__ == '__main__':
                     )
                     print("Unstaked successfully")
                     staked = False
+                    repeat_cnt -= 1
                     sn_price = get_sn_price(subtensor, netuid)
                     user_stake_price = sn_price - threshold    
                 elif not staked and sn_price < user_stake_price:

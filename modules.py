@@ -506,7 +506,8 @@ class LeoProxy:
         print(f"Tolerance set to: {tolerance}")
         print(f"Current alpha balance: {balance}")
 
-        amount = balance
+        if all:
+            amount = balance
         if amount.rao > balance.rao:
             print(f"Error: Amount to unstake is greater than current balance")
             return

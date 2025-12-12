@@ -31,14 +31,16 @@ if __name__ == '__main__':
     try:
       is_stake = input("Do you want to stake or unstake? (y/n): ")
       action = 'unstake'
-      user_stake_amount = 0
+      is_remove_stake = False
       user_stake_amount = float(input("Enter the amount: "))
       if is_stake.lower() == 'y':
         action = 'stake'
       else:
         unstake_all = input("Do you want to unstake all? (y/n)")
         if unstake_all == "y":
-            user_stake_amount = 0
+          user_stake_amount = 0
+          is_remove_stake = True
+          print(f"Unstaking all({user_stake_amount})...")
       
       netuid = int(input("Enter the netuid: "))
       sn_price = get_sn_price(subtensor, netuid)
@@ -60,12 +62,14 @@ if __name__ == '__main__':
             )
             print("Staked successfully")
           else:
+            print(f"Unstaking amount: {user_stake_amount}...")
+            print(f"Is remove all: {is_remove_stake}...")
             leo_proxy.remove_stake(
               netuid=netuid,
               hotkey=dest_hotkey,
-              amount=Balance.from_tao(user_stake_amount),
+              amount=Balance.from_tao(user_stake_amount, netuid=netuid),
               tolerance=tolerance,
-              all=True,
+              all=is_remove_stake,
             )
             print("Unstaked successfully")
           break
