@@ -187,6 +187,40 @@ class RonProxy:
         else:
             print(f"Error: {error_message}")
 
+    def move_stake(self, origin_hotkey: str, dest_hotkey: str, origin_netuid: int, dest_netuid: int):
+        """
+        Move stake between subnets.
+
+        Args:
+            origin_hotkey: Source hotkey address
+            dest_hotkey: Destination hotkey address
+            origin_netuid: Source subnet ID
+            dest_netuid: Destination subnet ID
+        """
+        balance = self.subtensor.get_stake(
+            coldkey_ss58=self.delegator,
+            hotkey_ss58=origin_hotkey,
+            netuid=origin_netuid,
+        )
+        print(f"Current alpha balance on netuid {origin_netuid}: {balance}")
+        
+        call = self.substrate.compose_call(
+            call_module='SubtensorModule',
+            call_function='move_stake',
+            call_params={
+                'origin_hotkey': origin_hotkey,
+                'destination_hotkey': dest_hotkey,
+                'origin_netuid': origin_netuid,
+                'destination_netuid': dest_netuid,
+                'alpha_amount': balance.rao,
+            }
+        )
+        is_success, error_message = self._do_proxy_call(call, 'Staking')
+        if is_success:
+            print(f"Stake moved successfully")
+        else:
+            print(f"Error: {error_message}")
+
 
     def swap_stake(self, hotkey: str, origin_netuid: int, dest_netuid: int,
                 amount: Balance, all: bool = False) -> None:
@@ -419,7 +453,6 @@ class LeoProxy:
             type_registry_preset='substrate-node-template',
         )
 
-
     def add_stake(self, netuid: int, hotkey: str, amount: Balance, tolerance: float = 0.01) -> None:
         """
         Add stake to a subnet.
@@ -511,12 +544,10 @@ class LeoProxy:
         if amount.rao > balance.rao:
             print(f"Error: Amount to unstake is greater than current balance")
             return
-        print("step1")
         subnet_info = self.subtensor.subnet(netuid)
         if not subnet_info:
             print(f"Subnet with netuid {netuid} does not exist")
             return
-        print("step2")
         
         if subnet_info.is_dynamic:
             rate = subnet_info.price.tao or 1
@@ -529,18 +560,15 @@ class LeoProxy:
         else:
             rate_with_tolerance = 1
             price_with_tolerance = 1
-        print("step3")
 
         free_balance = self.subtensor.get_balance(
             address=self.delegator,
         )
-        print("step4")
         
         subnet_info = self.subtensor.subnet(netuid)
         if not subnet_info:
             print(f"Subnet with netuid {netuid} does not exist")
             return
-        print("step5")
         
         if subnet_info.is_dynamic:
             rate = subnet_info.price.tao or 1
@@ -553,7 +581,6 @@ class LeoProxy:
         else:
             rate_with_tolerance = 1
             price_with_tolerance = 1
-        print("step6")
             
         call = self.substrate.compose_call(
             call_module='SubtensorModule',
@@ -566,7 +593,6 @@ class LeoProxy:
                 "allow_partial": False,
             }
         )
-        print("step7")
         is_success, error_message = self._do_proxy_call(call, 'Staking')
         if is_success:
             free_new_balance = self.subtensor.get_balance(
@@ -580,6 +606,39 @@ class LeoProxy:
         else:
             print(f"Error: {error_message}")
 
+    def move_stake(self, origin_hotkey: str, dest_hotkey: str, origin_netuid: int, dest_netuid: int):
+        """
+        Move stake between subnets.
+
+        Args:
+            origin_hotkey: Source hotkey address
+            dest_hotkey: Destination hotkey address
+            origin_netuid: Source subnet ID
+            dest_netuid: Destination subnet ID
+        """
+        balance = self.subtensor.get_stake(
+            coldkey_ss58=self.delegator,
+            hotkey_ss58=origin_hotkey,
+            netuid=origin_netuid,
+        )
+        print(f"Current alpha balance on netuid {origin_netuid}: {balance}")
+        
+        call = self.substrate.compose_call(
+            call_module='SubtensorModule',
+            call_function='move_stake',
+            call_params={
+                'origin_hotkey': origin_hotkey,
+                'destination_hotkey': dest_hotkey,
+                'origin_netuid': origin_netuid,
+                'destination_netuid': dest_netuid,
+                'alpha_amount': balance.rao,
+            }
+        )
+        is_success, error_message = self._do_proxy_call(call, 'Staking')
+        if is_success:
+            print(f"Stake moved successfully")
+        else:
+            print(f"Error: {error_message}")
 
     def swap_stake(self, hotkey: str, origin_netuid: int, dest_netuid: int,
                 amount: Balance, all: bool = False) -> None:

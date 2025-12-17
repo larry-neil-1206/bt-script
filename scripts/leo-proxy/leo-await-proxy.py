@@ -16,10 +16,10 @@ from app.services.proxy import Proxy
 from utils.index import get_sn_price, convert_alpha_to_float
 from modules import LeoProxy
 from bittensor.utils.balance import Balance
+from utils.const import NETUID_TO_ADDRESS
 
 if __name__ == '__main__':
     
-  dest_hotkey = ROUND_TABLE_HOTKEY
   wallet_name = 'leo' # input("Enter the wallet name: ")
   wallet = bt.Wallet(name=wallet_name)
   wallet.unlock_coldkey()
@@ -43,8 +43,13 @@ if __name__ == '__main__':
           print(f"Unstaking all({user_stake_amount})...")
       
       netuid = int(input("Enter the netuid: "))
+      if netuid == 104:
+        print("Netuid 104 is a SCAMMMMMMM. Please use another netuid.")
+        continue
       sn_price = get_sn_price(subtensor, netuid)
       print(f"SN{netuid} price: {sn_price}")
+      
+      dest_hotkey = NETUID_TO_ADDRESS.get(netuid, ROUND_TABLE_HOTKEY)
       
       while True:
         try:

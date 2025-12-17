@@ -44,6 +44,14 @@ def create_parser() -> argparse.ArgumentParser:
     swap_parser.add_argument('--all', action='store_true', help='Swap all available balance')
     swap_parser.add_argument('--name', type=str, default=".env", help='Specify the environment')
     
+    # Move stake command
+    move_parser = subparsers.add_parser('movestake', help='Move stake between subnets')
+    move_parser.add_argument('--origin_hotkey', type=str, required=True, help='Hotkey address')
+    move_parser.add_argument('--dest_hotkey', type=str, required=True, help='Hotkey address')
+    move_parser.add_argument('--origin_netuid', type=int, required=True, help='Source subnet ID')
+    move_parser.add_argument('--dest_netuid', type=int, required=True, help='Destination subnet ID')
+    move_parser.add_argument('--name', type=str, default=".env", help='Specify the environment')
+
     # Burned register command
     register_parser = subparsers.add_parser('register', help='Burned register')
     register_parser.add_argument('--netuid', type=int, required=True, help='Subnet ID')
@@ -178,7 +186,7 @@ def main():
     
     if not validate_args(args):
         sys.exit(1)
-        
+
     # Initialize RonProxy object
     ron_proxy = RonProxy(
         proxy_wallet=proxy_wallet,
@@ -210,6 +218,13 @@ def main():
                 dest_netuid=getattr(args, 'dest_netuid'),
                 amount=Balance.from_tao(args.amount, netuid=getattr(args, 'origin_netuid')),
                 all=args.all,
+            )
+        elif args.command == 'movestake':
+            ron_proxy.move_stake(
+                origin_hotkey=getattr(args, 'origin_hotkey'),
+                dest_hotkey=getattr(args, 'dest_hotkey'),
+                origin_netuid=getattr(args, 'origin_netuid'),
+                dest_netuid=getattr(args, 'dest_netuid'),
             )
         elif args.command == 'register':
             ron_proxy.burned_register(
