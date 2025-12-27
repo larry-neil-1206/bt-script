@@ -24,7 +24,7 @@ if __name__ == '__main__':
   wallet = bt.Wallet(name=wallet_name)
   wallet.unlock_coldkey()
   subtensor = bt.Subtensor(network=NETWORK)
-  tolerance = 1
+  tolerance = 0.01
   delegator = '5ESwpyuGxBmkXuQ1J8DqtmhFZQEDzLWKVup9xai567JRhvDN'
   
   while True:
@@ -73,7 +73,7 @@ if __name__ == '__main__':
               netuid=netuid,
               hotkey=dest_hotkey,
               amount=Balance.from_tao(user_stake_amount, netuid=netuid),
-              tolerance=tolerance,
+              tolerance=1,
               all=is_remove_stake,
             )
             print("Unstaked successfully")
