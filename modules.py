@@ -475,7 +475,6 @@ class LeoProxy:
         if not subnet_info:
             print(f"Subnet with netuid {netuid} does not exist")
             return
-        print("stake step 1")
         if subnet_info.is_dynamic:
             rate = 1 / subnet_info.price.tao or 1
             _rate_with_tolerance = rate * (
@@ -488,7 +487,6 @@ class LeoProxy:
         else:
             rate_with_tolerance = "1"
             price_with_tolerance = Balance.from_rao(1)
-        print("stake step 2")
         call = self.substrate.compose_call(
             call_module='SubtensorModule',
             call_function='add_stake_limit',
@@ -500,9 +498,7 @@ class LeoProxy:
                 "allow_partial": False,
             }
         )
-        print("stake step 3")
         is_success, error_message = self._do_proxy_call(call, 'Staking')
-        print("stake step 4")
         if is_success:
             new_free_balance = self.subtensor.get_balance(
                 address=self.delegator,
