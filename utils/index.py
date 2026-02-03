@@ -1,4 +1,5 @@
 import re
+from typing import Union
 
 def get_sn_price(subtensor, netuid):
     subnet = subtensor.subnet(netuid=netuid)
@@ -157,3 +158,117 @@ def extract_stake_events_from_data(subtensor, events_data):
 
 #         reset = "\033[0m"
 #         print(f"{color}SN {netuid_val:3d} => {prices[netuid_val]:8.5f}  {sign}{tao_amount:5.1f}  {coldkey}{reset}")
+
+
+TAO_TO_RAO = 1_000_000_000
+TOLERANCE_OFFSET = "*1.1"
+
+def sim_swap(
+    subtensor,
+    origin_netuid: int,
+    destination_netuid: int,
+    amount: float
+) -> float:
+    if origin_netuid == 0:
+        amount = int(amount * TAO_TO_RAO)
+        query = subtensor.substrate.runtime_call(
+            api="SwapRuntimeApi",
+            method="sim_swap_tao_for_alpha",
+            params=[destination_netuid, amount]
+        )
+        decoded = query.decode()
+
+        return decoded
+    elif destination_netuid == 0:
+        amount = int(amount * TAO_TO_RAO)
+        query = subtensor.substrate.runtime_call(
+            api="SwapRuntimeApi",
+            method="sim_swap_alpha_for_tao",
+            params=[origin_netuid, amount]
+        )
+        decoded = query.decode()
+        return decoded
+    else:
+        raise ValueError("Invalid netuid")
+
+
+def get_stake_min_tolerance_v2(tao_amount: float, netuid: int, subtensor) -> float:
+    subnet = subtensor.subnet(netuid=netuid)
+    sim_swap_result = sim_swap(subtensor, 0, netuid, tao_amount)
+    
+    if subnet is None:
+        raise ValueError(f"Subnet with netuid {netuid} does not exist")
+    
+    deviation = subnet.price.tao - subnet.tao_in.tao / subnet.alpha_in.tao
+
+    tao_amount_after = subnet.tao_in.tao + tao_amount - sim_swap_result["tao_fee"] / TAO_TO_RAO
+    alpha_amount_after = subnet.alpha_in.tao - sim_swap_result["alpha_amount"] / TAO_TO_RAO
+    limit_price = (tao_amount_after / alpha_amount_after) + deviation
+    reference_price = subnet.price.tao
+    if reference_price == 0:
+        raise ValueError("Reference price cannot be zero for tolerance calculation.")
+
+    tolerance = (limit_price / reference_price) - 1
+    return tolerance
+
+def calculate_stake_limit_price(
+    tao_amount: float,
+    netuid: int,
+    min_tolerance_staking: bool,
+    default_rate_tolerance: float,
+    subtensor,
+    tolerance_offset: Union[float, str] = TOLERANCE_OFFSET
+) -> float:
+    """
+    Calculate the rate tolerance for staking operations.
+    If min_tolerance_staking is True, calculates minimum tolerance.
+    - If TOLERANCE_OFFSET starts with '*', multiplies min_tolerance by that value
+    - Otherwise, adds TOLERANCE_OFFSET to min_tolerance
+    Otherwise, returns the default_rate_tolerance.
+    
+    Args:
+        tao_amount: Amount in TAO
+        netuid: Network/subnet ID
+        min_tolerance_staking: Whether to use minimum tolerance
+        default_rate_tolerance: Default tolerance value to use if not using min tolerance
+        subtensor: Optional Subtensor instance. If not provided, creates one using settings.NETWORK
+        
+    Returns:
+        int: Limit price value
+    """
+    if netuid == 0:
+        return TAO_TO_RAO + 1
+
+    if not min_tolerance_staking:
+        if default_rate_tolerance > 0.89:
+            return TAO_TO_RAO + 1
+
+    subnet = subtensor.subnet(netuid=netuid)
+
+    tolerance = default_rate_tolerance
+    if min_tolerance_staking:
+        deviation = subnet.price.tao - subnet.tao_in.tao / subnet.alpha_in.tao      
+        sim_swap_result = sim_swap(subtensor, 0, netuid, tao_amount)
+
+        tao_amount_after = subnet.tao_in.tao + tao_amount - sim_swap_result["tao_fee"] / TAO_TO_RAO
+        alpha_amount_after = subnet.alpha_in.tao - sim_swap_result["alpha_amount"] / TAO_TO_RAO
+        limit_price = (tao_amount_after / alpha_amount_after) + deviation
+        reference_price = subnet.price.tao
+
+        min_tolerance = (limit_price / reference_price) - 1
+        if isinstance(tolerance_offset, str) and tolerance_offset.startswith('*'):
+            multiplier = float(tolerance_offset[1:])
+            tolerance = min_tolerance * multiplier
+        else:
+            tolerance = min_tolerance + float(tolerance_offset)
+  
+    return tolerance
+    # rate = 1 / subnet.price.tao or 1
+    # _rate_with_tolerance = rate * (
+    #     1 + tolerance
+    # )  # Rate only for display
+    # price_with_tolerance = subnet.price.rao * (
+    #     1 + tolerance
+    # )
+    # return price_with_tolerance
+ 

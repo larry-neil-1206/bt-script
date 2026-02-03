@@ -13,7 +13,7 @@ from typing import List
 from app.constants import ROUND_TABLE_HOTKEY, NETWORK
 from app.core.config import settings
 from app.services.proxy import Proxy
-from utils.index import get_sn_price, convert_alpha_to_float
+from utils.index import get_sn_price, calculate_stake_limit_price
 from modules import LeoProxy
 from bittensor.utils.balance import Balance
 from utils.const import NETUID_TO_ADDRESS
@@ -48,11 +48,19 @@ if __name__ == '__main__':
         continue
       sn_price = get_sn_price(subtensor, netuid)
       print(f"SN{netuid} price: {sn_price}")
-      tolerance = input("Enter tolerance (default 0.005): ")
-      if tolerance == "":
-        tolerance = 0.005
-      else:
-        tolerance = float(tolerance)
+      # tolerance = input("Enter tolerance (default 0.005): ")
+      # if tolerance == "":
+      #   tolerance = 0.005
+      # else:
+      #   tolerance = float(tolerance)
+      
+      tolerance = calculate_stake_limit_price(
+        tao_amount = user_stake_amount,
+        netuid=netuid,
+        min_tolerance_staking=True,
+        default_rate_tolerance=0.01,
+        subtensor=subtensor,
+      )
 
       dest_hotkey = NETUID_TO_ADDRESS.get(netuid, ROUND_TABLE_HOTKEY)
       
