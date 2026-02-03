@@ -48,7 +48,12 @@ if __name__ == '__main__':
         continue
       sn_price = get_sn_price(subtensor, netuid)
       print(f"SN{netuid} price: {sn_price}")
-      
+      tolerance = input("Enter tolerance (default 0.005): ")
+      if tolerance == "":
+        tolerance = 0.005
+      else:
+        tolerance = float(tolerance)
+
       dest_hotkey = NETUID_TO_ADDRESS.get(netuid, ROUND_TABLE_HOTKEY)
       
       while True:
