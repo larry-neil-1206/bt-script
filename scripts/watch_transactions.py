@@ -3,10 +3,23 @@ import threading
 import requests
 import re
 
+# Constants (inlined from modules.constants)
+NETWORK = "finney"
+
+CEXS = {
+    "5FqBL928choLPmeFz5UVAvonBD5k7K2mZSXVC9RkFzLxoy2s": "MEXC",
+    "5GBnPzvPghS8AuCoo6bfnK7JUFHuyUhWSFD4woBNsKnPiEUi": "Binance",
+    "5HiveMEoWPmQmBAb8v63bKPcFhgTGCmST1TVZNvPHSTKFLCv": "Taobridge",
+    "5FqqXKb9zonSNKbZhEuHYjCXnmPbX9tdzMCU2gx8gir8Z8a5": "Cex",
+}
+
+GOOGLE_DOC_ID_OWNER_WALLETS = "1_d4mGniJfOuNuY1mPwrNjwNBAZaxrq_FKEGOo7eGXbU"
+GOOGLE_DOC_ID_BOTS = "1Vdm20cXVAK-kjgjBw9XcbVYaAvvCWyY8IuPLAE2aRBI"
+GOOGLE_DOC_ID_CHANNELS = "1c-KDhGKINbJRKlXBtsLahyuNIZg3ptRic1ZwM1PpWo4"
+GOOGLE_DOC_ID_OWNER_WALLETS_SS = "13N5_ITB7YTJwD0iOCE2ImgD-Im4w8Umf9wXWO5XwVbU"
+GOOGLE_DOC_ID_OWNER_WALLETS_PS = "1zD1YWtmHIt9cs-6naMUHOyunJCvEMXL2sVnWMXQ-g5w"
 
 REFRESH_INTERVAL = 20 # minutes
-NETWORK = "finney"
-#NETWORK = "ws://161.97.128.68:9944"
 subtensor = bt.Subtensor(NETWORK)
 subtensor_owner_coldkeys = bt.Subtensor(NETWORK)
 
@@ -16,7 +29,7 @@ owner_coldkeys = []
 
 
 def load_bots_from_gdoc():
-    url = "https://docs.google.com/document/d/1Vdm20cXVAK-kjgjBw9XcbVYaAvvCWyY8IuPLAE2aRBI/export?format=txt"
+    url = f"https://docs.google.com/document/d/{GOOGLE_DOC_ID_BOTS}/export?format=txt"
     try:
         global bots
         response = requests.get(url, timeout=10)
@@ -25,43 +38,43 @@ def load_bots_from_gdoc():
         bots = re.findall(r'5[1-9A-HJ-NP-Za-km-z]{47}', text)
     except Exception as e:
         print(f"Failed to load bots from Google Doc: {e}")
-
+         
 def load_wallet_owners_from_gdoc():
-    url = "https://docs.google.com/document/d/1VUDA8mzHd_iUQEqiDWMORys6--2ab8nDSThGb--_PaQ/export?format=txt"
-    try:
-        global wallet_owners
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        text = response.text
-        # Each pair is like: <wallet_address> <owner_name>
-        # build a dict mapping wallet address to owner name
-        wallet_owners = {}
-        pattern = r'(5[1-9A-HJ-NP-Za-km-z]{47})\s+([^\s]+)'
-        for match in re.findall(pattern, text):
-            address, owner = match
-            wallet_owners[address] = owner
-    except Exception as e:
-        print(f"Failed to load wallet owners from Google Doc: {e}")
+    global wallet_owners
+    urls = [
+        f"https://docs.google.com/document/d/{GOOGLE_DOC_ID_OWNER_WALLETS}/export?format=txt",
+        f"https://docs.google.com/document/d/{GOOGLE_DOC_ID_OWNER_WALLETS_SS}/export?format=txt",
+        f"https://docs.google.com/document/d/{GOOGLE_DOC_ID_OWNER_WALLETS_PS}/export?format=txt"
+    ]
+    for url in urls:    
+        try:
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
+            text = response.text
+            # Each pair is like: <wallet_address> <owner_name>
+            # build a dict mapping wallet address to owner name
+            pattern = r'(5[1-9A-HJ-NP-Za-km-z]{47})\s+([^\s]+)'
+            for match in re.findall(pattern, text):
+                address, owner = match
+                wallet_owners[address] = owner
 
+        except Exception as e:
+            print(f"Failed to load wallet owners from Google Doc: {e}")
+
+        
 def refresh_bots_periodically(interval_minutes=REFRESH_INTERVAL):
-    def refresh_bots():
-        load_wallet_owners_from_gdoc()  
-        load_bots_from_gdoc()
-        # Reschedule the timer to run again
-        threading.Timer(interval_minutes * 60, refresh_bots, []).start()
-    refresh_bots()
+    load_wallet_owners_from_gdoc()
+    load_bots_from_gdoc()
+    threading.Timer(interval_minutes * 60, refresh_bots_periodically, [interval_minutes]).start()
 
 refresh_bots_periodically()
 
 
 def refresh_owner_coldkeys_periodically(interval_minutes=REFRESH_INTERVAL):
-    def refresh_owner_coldkeys():
-        subnet_infos = subtensor_owner_coldkeys.all_subnets()
-        global owner_coldkeys
-        owner_coldkeys = [subnet_info.owner_coldkey for subnet_info in subnet_infos]
-        # Reschedule the timer to run again
-        threading.Timer(interval_minutes * 60, refresh_owner_coldkeys, []).start()
-    refresh_owner_coldkeys()
+    global owner_coldkeys
+    subnet_infos = subtensor_owner_coldkeys.all_subnets()
+    owner_coldkeys = [subnet_info.owner_coldkey for subnet_info in subnet_infos]
+    threading.Timer(interval_minutes * 60, refresh_owner_coldkeys_periodically, [interval_minutes]).start()
 
 refresh_owner_coldkeys_periodically()
 
@@ -82,6 +95,9 @@ def get_coldkey_display_name(coldkey):
     if coldkey in wallet_owners:
         return coldkey + f"{owner_color} ({wallet_owners[coldkey]}){reset}"
     
+    if coldkey in CEXS:
+        return coldkey + f"{owner_color} ({CEXS[coldkey]}){reset}"
+    
     return coldkey
 
 def get_color(event_type, coldkey):
@@ -93,140 +109,60 @@ def get_color(event_type, coldkey):
         return "\033[0m"
 
 
-def extract_stake_events_from_data(events_data):
-    """
-    Extract stake and unstake events from blockchain event data.
-    
-    Args:
-        events_data: List of event dictionaries from blockchain
-    
-    Returns:
-        List of dictionaries containing stake/unstake event information
-    """
-    stake_events = []
-    
+
+def extract_transfer_events_from_data(events_data):
+    # Extract events which transfer TAO, like StakeAdded, StakeRemoved, StakeMoved, and direct TAO transfers
+    transfer_events = []
     for event in events_data:
-        phase = event.get('phase', {})
         event_info = event.get('event', {})
-        
-        # Check if this is a SubtensorModule event
-        if event_info.get('module_id') == 'SubtensorModule':
-            event_id = event_info.get('event_id')
-            attributes = event_info.get('attributes', {})
-            
-            # Convert coldkey and hotkey to ss58 addresses if possible
-            def to_ss58(addr_bytes, ss58_format = 42):
-                if addr_bytes is None:
-                    return None
-                pubkey_bytes = bytes(addr_bytes).hex()
-                if not pubkey_bytes.startswith("0x"):
-                    pubkey_bytes = "0x" + pubkey_bytes
-                return subtensor.substrate.ss58_encode(pubkey_bytes, ss58_format=ss58_format)
-                
-            if event_id == 'StakeAdded':
-                # The attributes for StakeAdded are a tuple, not a dict.
-                # Example: (
-                #   ((coldkey_bytes,), (hotkey_bytes,), amount, stake, netuid, block_number)
-                # )
-                # So we need to unpack the tuple accordingly.
-                if isinstance(attributes, tuple) and len(attributes) >= 6:
-                    coldkey_tuple = to_ss58(attributes[0][0]) if isinstance(attributes[0], tuple) and len(attributes[0]) > 0 else attributes[0]
-                    hotkey_tuple = to_ss58(attributes[1][0]) if isinstance(attributes[1], tuple) and len(attributes[1]) > 0 else attributes[1]
-                    amount = attributes[2]
-                    # attributes[3] is stake, but we use amount for TAO
-                    netuid = attributes[4]
-                else:
-                    coldkey_tuple = None
-                    hotkey_tuple = None
-                    amount = None
-                    netuid = None
-                stake_events.append({
-                    'type': 'StakeAdded',
-                    'coldkey': coldkey_tuple,
-                    'hotkey': hotkey_tuple,
-                    'netuid': netuid,
+        module_id = event_info.get('module_id')
+        event_id = event_info.get('event_id')
+        attributes = event_info.get('attributes', {})
+
+        # SubtensorMo
+
+        # Balances pallet (native TAO transfers)
+        if module_id == 'Balances' and event_id in ('Transfer', 'Deposit'):
+            # Transfer between accounts
+            if event_id == 'Transfer':
+                from_addr = attributes.get('from')
+                to_addr = attributes.get('to')
+                amount = attributes.get('amount')
+                transfer_events.append({
+                    'type': 'Transfer',
+                    'from': from_addr,
+                    'to': to_addr,
                     'amount': amount,
                     'amount_tao': amount / 1e9 if amount else 0,
                 })
-                
-            elif event_id == 'StakeRemoved':
-                # Extract unstake information - also a tuple
-                if isinstance(attributes, tuple) and len(attributes) >= 6:
-                    coldkey_tuple = to_ss58(attributes[0][0]) if isinstance(attributes[0], tuple) and len(attributes[0]) > 0 else attributes[0]
-                    hotkey_tuple = to_ss58(attributes[1][0]) if isinstance(attributes[1], tuple) and len(attributes[1]) > 0 else attributes[1]
-                    amount = attributes[2]
-                    netuid = attributes[4]
-                else:
-                    coldkey_tuple = None
-                    hotkey_tuple = None
-                    amount = None
-                    netuid = None
-                    block_number = None
+            # # Deposit event - typically corresponds to fee refund or reward
+            # elif event_id == 'Deposit':
+            #     to_addr = attributes.get('who')
+            #     amount = attributes.get('amount')
+            #     transfer_events.append({
+            #         'type': 'Deposit',
+            #         'to': to_addr,
+            #         'amount': amount,
+            #         'amount_tao': amount / 1e9 if amount else 0,
+            #     })
 
-                stake_events.append({
-                    'type': 'StakeRemoved',
-                    'coldkey': coldkey_tuple,
-                    'hotkey': hotkey_tuple,
-                    'netuid': netuid,
-                    'amount': amount,
-                    'amount_tao': amount / 1e9 if amount else 0,
-                })
-                
-            elif event_id == 'StakeMoved':
-                # Extract stake move information - also a tuple
-                if isinstance(attributes, tuple) and len(attributes) >= 6:
-                    coldkey_tuple = to_ss58(attributes[0][0]) if isinstance(attributes[0], tuple) and len(attributes[0]) > 0 else attributes[0]
-                    from_hotkey_tuple = to_ss58(attributes[1][0]) if isinstance(attributes[1], tuple) and len(attributes[1]) > 0 else attributes[1]
-                    to_hotkey_tuple = to_ss58(attributes[3][0]) if isinstance(attributes[3], tuple) and len(attributes[3]) > 0 else attributes[3]
-                    netuid = attributes[4]
-                    amount = attributes[5]
-                else:
-                    coldkey_tuple = None
-                    from_hotkey_tuple = None
-                    to_hotkey_tuple = None
-                    netuid = None
-                    amount = None
-                
-                stake_events.append({
-                    'type': 'StakeMoved',
-                    'coldkey': coldkey_tuple,
-                    'from_hotkey': from_hotkey_tuple,
-                    'to_hotkey': to_hotkey_tuple,
-                    'netuid': netuid,
-                    'amount': amount,
-                    'amount_tao': amount / 1e9 if amount else 0,
-                })
-    
-    return stake_events
-def print_stake_events(stake_events, netuid):
-    now_subnet_infos = subtensor.all_subnets()
-    prices = [float(subnet_info.price) for subnet_info in now_subnet_infos]
-    for event in stake_events:
-        netuid_val = int(event['netuid'])
-        tao_amount = float(event['amount_tao'])
-        coldkey = event['coldkey']
-        coldkey = get_coldkey_display_name(coldkey)
+    return transfer_events
 
-        color = get_color(event['type'], coldkey)    
+def print_transfer_events(transfer_events, threshold):
+     for event in transfer_events:
+        from_addr = event['from']
+        to_addr = event['to']
+        amount_tao = event['amount_tao']
+        from_owner_name = get_coldkey_display_name(from_addr)
+        to_owner_name = get_coldkey_display_name(to_addr)
 
-        # Green for stake added, red for stake removed (bright)
-        if event['type'] == 'StakeAdded':
-            sign = "+"
-        elif event['type'] == 'StakeRemoved':
-            sign = "-"
-        else:
-            continue
-
-        reset = "\033[0m"
-        if (netuid == netuid or netuid == -1) and (abs(tao_amount) > threshold or threshold == -1):
-            print(f"{color}SN {netuid_val:3d} => {prices[netuid_val]:8.5f}  {sign}{tao_amount:5.1f}  {coldkey}{reset}")
+        if amount_tao > threshold:
+            print(f"\033[91m{from_owner_name}\033[0m => \033[92m{to_owner_name}\033[0m: \033[94m{round(amount_tao, 1)} TAO\033[0m")
 
                   
 if __name__ == "__main__":    
-
-    #netuid = int(input("Enter the netuid: "))
+    
     #threshold = float(input("Enter the threshold: "))
-    netuid = -1
     threshold = 0.5
     while True:
         block_number = subtensor.get_current_block()
@@ -235,9 +171,10 @@ if __name__ == "__main__":
 
         
         # Extract stake events from live data
-        stake_events = extract_stake_events_from_data(events)
-        if stake_events:
-            print(f"*{'*'*40}")
-            print_stake_events(stake_events, netuid)
+        transfer_events = extract_transfer_events_from_data(events)
+        print(f"{'*'*40}")
+        
+        if transfer_events:
+            print_transfer_events(transfer_events, threshold)
         
         subtensor.wait_for_block()

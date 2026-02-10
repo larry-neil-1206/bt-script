@@ -6,9 +6,9 @@ Proxy for Bittensor Staking - Ensuring 100% confidence and security for Subnet a
 
 ## Installation
 
-```git clone https://github.com/ronx-labs/bt-proxy.git```
+```git clone https://github.com/larry-neil-1206/bt-script.git```
 
-```cd bt-proxy```
+```cd bt-script```
 
 ```python3 -m venv .venv```
 
