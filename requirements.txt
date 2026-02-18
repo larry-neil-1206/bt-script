@@ -1,5 +1,5 @@
-bittensor
+bittensor==9.12.2
 substrate-interface
 python-dotenv
 bcrypt
-bittensor-cli
+bittensor-cli==9.16.0

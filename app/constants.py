@@ -1,3 +1,4 @@
 ROUND_TABLE_HOTKEY = "5Gq2gs4ft5dhhjbHabvVbAhjMCV2RgKmVJKAFCUWiirbRT21"
-NETWORK = "finney"
+NETWORK = "local"
+# NETWORK = "finney"
 #NETWORK = "ws://161.97.128.68:9944"
