@@ -9,6 +9,7 @@ import time
 RPC_ENDPOINTS = {
     'test': 'wss://test.finney.opentensor.ai:443',
     'finney': 'wss://entrypoint-finney.opentensor.ai:443',
+    'local': 'ws://127.0.0.1:9944'
 }
 
 class RonProxy:

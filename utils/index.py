@@ -6,7 +6,7 @@ def get_sn_price(subtensor, netuid):
     if subnet is None:
         raise Exception(f"Subnet is None for netuid: {netuid}")
     sn_price_raw = subnet.alpha_to_tao(1)
-    sn_price = float(str(sn_price_raw).replace('τ', '').strip())
+    sn_price = float(str(sn_price_raw).replace('τ', '').replace(',', '').strip())
     return sn_price
 
 def convert_alpha_to_float(raw_amount):

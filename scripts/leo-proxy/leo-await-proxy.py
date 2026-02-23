@@ -26,7 +26,7 @@ if __name__ == '__main__':
   subtensor = bt.Subtensor(network=NETWORK)
   tolerance = 0.01
   delegator = '5ESwpyuGxBmkXuQ1J8DqtmhFZQEDzLWKVup9xai567JRhvDN'
-  
+  block_ids = [104, 126, 67, 76, 107, 99, 15, 47, 38, 114]
   while True:
     try:
       is_stake = input("Do you want to stake or unstake? (y/n): ")
@@ -43,8 +43,8 @@ if __name__ == '__main__':
           print(f"Unstaking all({user_stake_amount})...")
       
       netuid = int(input("Enter the netuid: "))
-      if netuid == 104:
-        print("Netuid 104 is a SCAMMMMMMM. Please use another netuid.")
+      if netuid in block_ids:
+        print("Poor sn detection. Please use another netuid.")
         continue
       sn_price = get_sn_price(subtensor, netuid)
       print(f"SN{netuid} price: {sn_price}")
