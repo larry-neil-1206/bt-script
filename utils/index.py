@@ -1,5 +1,5 @@
 import re
-from typing import Union
+from typing import Union, Optional
 
 def get_sn_price(subtensor, netuid):
     subnet = subtensor.subnet(netuid=netuid)
@@ -272,3 +272,30 @@ def calculate_stake_limit_price(
     # )
     # return price_with_tolerance
  
+# def get_stake_info_for_coldkeys(
+#         self, coldkey_ss58s: list[str], block: Optional[int] = None
+#     ) -> dict[str, list["StakeInfo"]]:
+#         """
+#         Retrieves the stake information for multiple coldkeys.
+
+#         Parameters:
+#             coldkey_ss58s: A list of SS58 addresses of the coldkeys to query.
+#             block: The block number at which to query the stake information.
+
+#         Returns:
+#             The dictionary mapping coldkey addresses to a list of StakeInfo objects.
+#         """
+#         query = self.query_runtime_api(
+#             runtime_api="StakeInfoRuntimeApi",
+#             method="get_stake_info_for_coldkeys",
+#             params=[coldkey_ss58s],
+#             block=block,
+#         )
+
+#         if query is None:
+#             return {}
+
+#         return {
+#             decode_account_id(ck): StakeInfo.list_from_dicts(st_info)
+#             for ck, st_info in query
+#         }

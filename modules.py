@@ -487,7 +487,7 @@ class LeoProxy:
             )
         else:
             rate_with_tolerance = "1"
-            price_with_tolerance = Balance.from_rao(1)
+            price_with_tolerance = Balance.from_tao(1)
         call = self.substrate.compose_call(
             call_module='SubtensorModule',
             call_function='add_stake_limit',
