@@ -8,8 +8,8 @@ import threading
 import requests
 
 # --- Constants (from modules.constants) ---
-NETWORK = "finney"
-GOOGLE_DOC_ID_BOTS = "1Vdm20cXVAK-kjgjBw9XcbVYaAvvCWyY8IuPLAE2aRBI"
+NETWORK = "local"
+GOOGLE_DOC_ID_BOTS = "1y9NvAqdkofP853W_p5wsMRpaVbZFOKmqUaP_Y0jsvfY"
 GOOGLE_DOC_ID_OWNER_WALLETS = "1_d4mGniJfOuNuY1mPwrNjwNBAZaxrq_FKEGOo7eGXbU"
 GOOGLE_DOC_ID_OWNER_WALLETS_SS = "13N5_ITB7YTJwD0iOCE2ImgD-Im4w8Umf9wXWO5XwVbU"
 GOOGLE_DOC_ID_OWNER_WALLETS_PS = "1zD1YWtmHIt9cs-6naMUHOyunJCvEMXL2sVnWMXQ-g5w"

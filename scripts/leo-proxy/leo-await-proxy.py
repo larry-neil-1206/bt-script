@@ -26,7 +26,7 @@ if __name__ == '__main__':
   subtensor = bt.Subtensor(network=NETWORK)
   tolerance = 0.01
   delegator = '5ESwpyuGxBmkXuQ1J8DqtmhFZQEDzLWKVup9xai567JRhvDN'
-  block_ids = [104, 126, 67, 76, 107, 99, 15, 47, 38, 114]
+  block_ids = [104, 126, 67, 76, 96, 91, 107, 99]
   while True:
     try:
       is_stake = input("Do you want to stake or unstake? (y/n): ")

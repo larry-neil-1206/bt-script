@@ -122,9 +122,9 @@ class RonProxy:
         if all:
             amount = balance
             
-        if amount.rao > balance.rao:
-            print(f"Error: Amount to unstake is greater than current balance")
-            return
+        # if amount.rao > balance.rao:
+        #     print(f"Error: Amount to unstake is greater than current balance")
+        #     return
         
         subnet_info = self.subtensor.subnet(netuid)
         if not subnet_info:
@@ -538,9 +538,9 @@ class LeoProxy:
 
         if all:
             amount = balance
-        if amount.rao > balance.rao:
-            print(f"Error: Amount to unstake is greater than current balance")
-            return
+        # if amount.rao > balance.rao:
+        #     print(f"Error: Amount to unstake is greater than current balance")
+        #     return
         subnet_info = self.subtensor.subnet(netuid)
         if not subnet_info:
             print(f"Subnet with netuid {netuid} does not exist")
