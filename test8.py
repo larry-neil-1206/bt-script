@@ -11,7 +11,7 @@ if __name__ == "__main__":
     # Repeat the process forever
     while True:
         # Create a wallet with a fixed name
-        wallet = bt.Wallet(name=f"random_mnemonic_wallet_{i}", path="/test-wallets")
+        wallet = bt.Wallet(name=f"random_mnemonic_wallet_{i}", path="/w8")
 
         # Generate a random 12-word mnemonic, then regenerate the coldkey from it (no password)
         mnemonic = Keypair.generate_mnemonic(n_words=12)
@@ -40,7 +40,7 @@ if __name__ == "__main__":
                 )
         else:
             # Remove generated wallet directory (and its contents) if balance is 0
-            wallet_dir = os.path.join("/test-wallets", f"random_mnemonic_wallet_{i}")
+            wallet_dir = os.path.join("/w8", f"random_mnemonic_wallet_{i}")
             if os.path.isdir(wallet_dir):
                 shutil.rmtree(wallet_dir)
 

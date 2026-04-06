@@ -24,16 +24,14 @@ if __name__ == '__main__':
   wallet = bt.Wallet(name=wallet_name)
   wallet.unlock_coldkey()
   subtensor = bt.Subtensor(network=NETWORK)
-  tolerance = 0.01
   delegator = '5ESwpyuGxBmkXuQ1J8DqtmhFZQEDzLWKVup9xai567JRhvDN'
-  block_ids = [104, 126, 67, 107, 99, 15, 47, 38, 114]
   
   try:
     action = 'unstake'
     user_stake_amount = 0
-    is_remove_stake = True
     
-    netuid = 76
+    netuid = int(input("Enter the netuid: "))
+    target_price = float(input("Enter the target price: "))
 
     dest_hotkey = NETUID_TO_ADDRESS.get(netuid, ROUND_TABLE_HOTKEY)
     
@@ -46,15 +44,16 @@ if __name__ == '__main__':
       try:
         sn_price = get_sn_price(subtensor, netuid)
         print(f"Current SN Price: {sn_price}")
-        if sn_price > 5000:
+        if sn_price > target_price:
           leo_proxy.remove_stake(
             netuid=netuid,
             hotkey=dest_hotkey,
             amount=Balance.from_tao(user_stake_amount, netuid=netuid),
             tolerance=1,
-            all=is_remove_stake,
+            all=True,
           )
           print("Unstaked successfully")
+          break
           
         subtensor.wait_for_block()
       except Exception as e:
