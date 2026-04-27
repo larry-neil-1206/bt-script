@@ -25,6 +25,25 @@ class StakeService:
         self.proxy = Proxy(settings.NETWORK, use_era=settings.USE_ERA)
         self.subtensor = bt.Subtensor(network=settings.NETWORK)
     
+    def get_stake(
+        self, coldkey_ss58: str, hotkey_ss58: str, netuid: int, block: int | None = None
+    ) -> bt.Balance:
+        """
+        Get the stake for a given hotkey/coldkey pair.
+
+        NOTE: This function was needed because of a breaking change in bittensor SDK that was released 2026-04-24
+        that broke the subtensor.get_stake function.  When we migrate to bittensor to >= 10.2.0, this function can be
+        removed and we can revert to using the subtensor.get_stake function.
+        """
+        result = self.subtensor.query_runtime_api(
+            runtime_api="StakeInfoRuntimeApi",
+            method="get_stake_info_for_hotkey_coldkey_netuid",
+            params=[hotkey_ss58, coldkey_ss58, netuid],
+            block=block,
+        )
+        stake = bt.Balance.from_rao(result["stake"]).set_unit(netuid)
+        return stake
+    
     def get_stake_min_tolerance(self, tao_amount: float, netuid: int) -> float:
         """
         Calculate the minimum tolerance for staking operations.
@@ -152,7 +171,7 @@ class StakeService:
         # Determine amount to unstake
         if amount is None:
             # Unstake all available balance
-            amount_balance = self.subtensor.get_stake(
+            amount_balance = self.get_stake(
                 coldkey_ss58=delegator,
                 hotkey_ss58=dest_hotkey,
                 netuid=netuid
@@ -223,7 +242,7 @@ class StakeService:
         wallet, delegator = self.wallets[wallet_name]
 
         if amount is None:
-            amount_balance = self.subtensor.get_stake(
+            amount_balance = self.get_stake(
                 coldkey_ss58=delegator,
                 hotkey_ss58=origin_hotkey,
                 netuid=origin_netuid

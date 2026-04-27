@@ -35,6 +35,24 @@ class RonProxy:
             type_registry_preset='substrate-node-template',
         )
 
+    def get_stake(
+        self, coldkey_ss58: str, hotkey_ss58: str, netuid: int, block: int | None = None
+    ) -> bt.Balance:
+        """
+        Get the stake for a given hotkey/coldkey pair.
+
+        NOTE: This function was needed because of a breaking change in bittensor SDK that was released 2026-04-24
+        that broke the subtensor.get_stake function.  When we migrate to bittensor to >= 10.2.0, this function can be
+        removed and we can revert to using the subtensor.get_stake function.
+        """
+        result = self.subtensor.query_runtime_api(
+            runtime_api="StakeInfoRuntimeApi",
+            method="get_stake_info_for_hotkey_coldkey_netuid",
+            params=[hotkey_ss58, coldkey_ss58, netuid],
+            block=block,
+        )
+        stake = bt.Balance.from_rao(result["stake"]).set_unit(netuid)
+        return stake
 
     def add_stake(self, netuid: int, hotkey: str, amount: Balance, tolerance: float = 0.01) -> None:
         """
@@ -109,7 +127,7 @@ class RonProxy:
             amount: Amount to unstake (if not using --all)
             all: Whether to unstake all available balance
         """
-        balance = self.subtensor.get_stake(
+        balance = self.get_stake(
             coldkey_ss58=self.delegator,
             hotkey_ss58=hotkey,
             netuid=netuid,
@@ -198,7 +216,7 @@ class RonProxy:
             origin_netuid: Source subnet ID
             dest_netuid: Destination subnet ID
         """
-        balance = self.subtensor.get_stake(
+        balance = self.get_stake(
             coldkey_ss58=self.delegator,
             hotkey_ss58=origin_hotkey,
             netuid=origin_netuid,
@@ -235,7 +253,7 @@ class RonProxy:
             amount: Amount to swap (if not using --all)
             all: Whether to swap all available balance
         """
-        balance = self.subtensor.get_stake(
+        balance = self.get_stake(
             coldkey_ss58=self.delegator,
             hotkey_ss58=hotkey,
             netuid=origin_netuid,
@@ -352,7 +370,7 @@ class RonProxy:
             destination: Destination coldkey address
             amount: Amount to transfer
         """
-        balance = self.subtensor.get_stake(
+        balance = self.get_stake(
             coldkey_ss58=self.delegator,
             hotkey_ss58=hotkey,
             netuid=netuid,
@@ -454,6 +472,25 @@ class LeoProxy:
             type_registry_preset='substrate-node-template',
         )
 
+    def get_stake(
+        self, coldkey_ss58: str, hotkey_ss58: str, netuid: int, block: int | None = None
+    ) -> bt.Balance:
+        """
+        Get the stake for a given hotkey/coldkey pair.
+
+        NOTE: This function was needed because of a breaking change in bittensor SDK that was released 2026-04-24
+        that broke the subtensor.get_stake function.  When we migrate to bittensor to >= 10.2.0, this function can be
+        removed and we can revert to using the subtensor.get_stake function.
+        """
+        result = self.subtensor.query_runtime_api(
+            runtime_api="StakeInfoRuntimeApi",
+            method="get_stake_info_for_hotkey_coldkey_netuid",
+            params=[hotkey_ss58, coldkey_ss58, netuid],
+            block=block,
+        )
+        stake = bt.Balance.from_rao(result["stake"]).set_unit(netuid)
+        return stake
+    
     def add_stake(self, netuid: int, hotkey: str, amount: Balance, tolerance: float = 0.01) -> None:
         """
         Add stake to a subnet.
@@ -514,7 +551,6 @@ class LeoProxy:
         else:
             print(f"Error: {error_message}")
 
-
     def remove_stake(self, netuid: int, hotkey: str, amount: Balance,
                     all: bool = False, tolerance: float = 0.05) -> None:
         """
@@ -526,7 +562,7 @@ class LeoProxy:
             amount: Amount to unstake (if not using --all)
             all: Whether to unstake all available balance
         """
-        balance = self.subtensor.get_stake(
+        balance = self.get_stake(
             coldkey_ss58=self.delegator,
             hotkey_ss58=hotkey,
             netuid=netuid,
@@ -613,7 +649,7 @@ class LeoProxy:
             origin_netuid: Source subnet ID
             dest_netuid: Destination subnet ID
         """
-        balance = self.subtensor.get_stake(
+        balance = self.get_stake(
             coldkey_ss58=self.delegator,
             hotkey_ss58=origin_hotkey,
             netuid=origin_netuid,
@@ -649,7 +685,7 @@ class LeoProxy:
             amount: Amount to swap (if not using --all)
             all: Whether to swap all available balance
         """
-        balance = self.subtensor.get_stake(
+        balance = self.get_stake(
             coldkey_ss58=self.delegator,
             hotkey_ss58=hotkey,
             netuid=origin_netuid,
@@ -741,7 +777,7 @@ class LeoProxy:
             destination: Destination coldkey address
             amount: Amount to transfer
         """
-        balance = self.subtensor.get_stake(
+        balance = self.get_stake(
             coldkey_ss58=self.delegator,
             hotkey_ss58=hotkey,
             netuid=netuid,

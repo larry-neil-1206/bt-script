@@ -18,6 +18,10 @@ from modules import LeoProxy
 from bittensor.utils.balance import Balance
 from utils.const import NETUID_TO_ADDRESS
 
+wallet_owner_pairs = [
+  ('idiot_whale', '5CQJRnpb8JtC4bWxGb463wGviLD6qrXg4xKCpxN5CS4WiSQY'),
+  ('const', '5GH2aUTMRUh1RprCgH4x3tRyCaKeUi5BfmYCfs1NARA8R54n'),
+]
 if __name__ == '__main__':
     
   wallet_name = 'leo' # input("Enter the wallet name: ")
@@ -25,8 +29,7 @@ if __name__ == '__main__':
   wallet.unlock_coldkey()
   subtensor = bt.Subtensor(network=NETWORK)
   tolerance = 0.01
-  delegator = '5ESwpyuGxBmkXuQ1J8DqtmhFZQEDzLWKVup9xai567JRhvDN'
-  block_ids = [104, 67, 76, 96, 91, 107, 99, 78]
+  delegator = wallet_owner_pairs[1][1]
   while True:
     try:
       is_stake = input("Do you want to stake or unstake? (y/n): ")
@@ -43,9 +46,7 @@ if __name__ == '__main__':
           print(f"Unstaking all({user_stake_amount})...")
       
       netuid = int(input("Enter the netuid: "))
-      # if netuid in block_ids:
-      #   print("Poor sn detection. Please use another netuid.")
-      #   continue
+      
       sn_price = get_sn_price(subtensor, netuid)
       print(f"SN{netuid} price: {sn_price}")
       # tolerance = input("Enter tolerance (default 0.005): ")
@@ -82,7 +83,6 @@ if __name__ == '__main__':
           else:
             print(f"Unstaking amount: {user_stake_amount}...")
             print(f"Is remove all: {is_remove_stake}...")
-            print(f"netuid: {netuid}...")
             leo_proxy.remove_stake(
               netuid=netuid,
               hotkey=dest_hotkey,
@@ -94,7 +94,6 @@ if __name__ == '__main__':
           break
         except Exception as e:
           print(f"Action Error: {e}")
-          break
       
     except Exception as e:
       print(f"Error: {e}")

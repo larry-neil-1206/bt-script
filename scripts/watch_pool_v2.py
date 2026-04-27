@@ -57,10 +57,10 @@ def get_total_value(subtensor_obj, wallet_ss58, subnet_infos, current_netuid, ca
     total_value = free_value + now_subnet_stake_value + other_subnet_staked_value
 
     reset = "\033[0m"
-    total_color = "\033[96m"
-    free_color = "\033[92m"
-    current_color = "\033[94m"
-    other_color = "\033[93m"
+    total_color = "\033[38;5;109m"
+    free_color = "\033[38;5;22m"
+    current_color = "\033[38;5;175m"
+    other_color = "\033[38;5;95m"
 
     def format_value(value):
         if value < 0.5:
@@ -152,9 +152,9 @@ refresh_owner_coldkeys_periodically()
 def get_coldkey_display_name(coldkey, hotkey=None):
     if coldkey is None:
         return "Unknown"
-    owner_color = "\033[93m"
-    wallet_number_color = "\033[96m"
-    color = "\033[94m"
+    owner_color = "\033[38;5;226m"
+    wallet_number_color = "\033[38;5;109m"
+    color = "\033[38;5;175m"
     reset = "\033[0m"
 
     if coldkey in owner_coldkeys:
@@ -179,9 +179,9 @@ def get_coldkey_display_name(coldkey, hotkey=None):
 
 def get_color(event_type, coldkey):
     if event_type == 'StakeAdded':
-        return "\033[38;5;117m"
+        return "\033[38;5;22m"
     elif event_type == 'StakeRemoved':
-        return "\033[38;5;94m"
+        return "\033[38;5;95m"
     else:
         return "\033[0m"
 
@@ -368,7 +368,15 @@ def print_stake_events(stake_events, netuid, show_balance, coldkeys):
                 stake_infos[old_coldkey]
             )
 
-        print(f"{color}SN {netuid_val:3d} => {prices[netuid_val]:8.5f}  {sign}{tao_amount:5.1f}  {coldkey}{reset} {total_value_str}")
+        # Color the amount based on type and value
+        amount_color = ""
+        if abs(tao_amount) > 49:
+            if event['type'] == 'StakeAdded':
+                amount_color = "\033[38;5;46m"  # Normal green
+            elif event['type'] == 'StakeRemoved':
+                amount_color = "\033[38;5;196m"  # Red
+        
+        print(f"{color}SN {netuid_val:3d} => {prices[netuid_val]:8.5f}  {amount_color}{sign}{tao_amount:5.1f}{reset}  {color}{coldkey}{reset} {total_value_str}")
 
 
 if __name__ == "__main__":
