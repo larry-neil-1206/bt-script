@@ -3,6 +3,8 @@ from substrateinterface import SubstrateInterface
 from substrateinterface.exceptions import SubstrateRequestException
 from typing import Optional, cast
 from bittensor.utils.balance import Balance, FixedPoint, fixed_to_float
+from bittensor.core.extrinsics.mev_shield import submit_encrypted_extrinsic
+
 import threading
 import time
 
@@ -816,23 +818,34 @@ class LeoProxy:
             }
         )
         print("proxy_call_step1")
-        extrinsic = self.substrate.create_signed_extrinsic(
-            call=proxy_call,
-            keypair=self.proxy_wallet.coldkey,
-            era={"period": 1},
-        )
-        print("proxy_call_step2")
+        # extrinsic = self.substrate.create_signed_extrinsic(
+        #     call=proxy_call,
+        #     keypair=self.proxy_wallet.coldkey,
+        #     era={"period": 1},
+        # )
+        # print("proxy_call_step2")
         
         receipt = [None]
         exception = [None]
         
         def submit_with_timeout():
             try:
-                receipt[0] = self.substrate.submit_extrinsic(
-                    extrinsic,
+                # receipt[0] = self.substrate.submit_extrinsic(
+                #     extrinsic,
+                #     wait_for_inclusion=True,
+                #     wait_for_finalization=False,
+                # )
+                receipt[0] = submit_encrypted_extrinsic(
+                    subtensor=self.subtensor,
+                    wallet=self.proxy_wallet,
+                    call=proxy_call,
+                    period=None,
+                    raise_error=False,
                     wait_for_inclusion=True,
                     wait_for_finalization=False,
+                    wait_for_revealed_execution=False,
                 )
+
             except Exception as e:
                 exception[0] = e
         
