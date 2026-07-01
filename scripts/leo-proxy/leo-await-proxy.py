@@ -27,6 +27,7 @@ if __name__ == '__main__':
   tolerance = 0.01
   delegator = '5ESwpyuGxBmkXuQ1J8DqtmhFZQEDzLWKVup9xai567JRhvDN'
   block_ids = [104, 67, 76, 96, 91, 107, 99, 78]
+  use_mev = True
   while True:
     try:
       is_stake = input("Do you want to stake or unstake? (y/n): ")
@@ -54,6 +55,9 @@ if __name__ == '__main__':
       # else:
       #   tolerance = float(tolerance)
       
+      is_using_mev = input("Do you want to use MEV? (y/n): ")
+      use_mev = True if is_using_mev.lower() == 'y' else False
+      
       tolerance = calculate_stake_limit_price(
         tao_amount = user_stake_amount,
         netuid=netuid,
@@ -62,7 +66,8 @@ if __name__ == '__main__':
         subtensor=subtensor,
       )
 
-      dest_hotkey = NETUID_TO_ADDRESS.get(netuid, ROUND_TABLE_HOTKEY)
+      dest_hotkey = NETUID_TO_ADDRESS.get(netuid, "5E2LP6EnZ54m3wS8s1yPvD5c3xo71kQroBw7aUVK32TKeZ5u")
+      # dest_hotkey = "5E2LP6EnZ54m3wS8s1yPvD5c3xo71kQroBw7aUVK32TKeZ5u"
       
       while True:
         try:
@@ -77,6 +82,7 @@ if __name__ == '__main__':
               hotkey=dest_hotkey,
               amount=Balance.from_tao(user_stake_amount),
               tolerance=tolerance,
+              use_mev=use_mev,
             )
             print("Staked successfully")
           else:
@@ -89,6 +95,7 @@ if __name__ == '__main__':
               amount=Balance.from_tao(user_stake_amount, netuid=netuid),
               tolerance=1,
               all=is_remove_stake,
+              use_mev=use_mev,
             )
             print("Unstaked successfully")
           break

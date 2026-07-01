@@ -6,7 +6,9 @@ import re
 import sys
 import threading
 import requests
+import logging
 
+logging.getLogger("bittensor").setLevel(logging.ERROR)
 # --- Constants (from modules.constants) ---
 NETWORK = "local"
 GOOGLE_DOC_ID_BOTS = "1y9NvAqdkofP853W_p5wsMRpaVbZFOKmqUaP_Y0jsvfY"

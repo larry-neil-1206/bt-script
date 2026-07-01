@@ -33,7 +33,8 @@ if __name__ == '__main__':
     netuid = int(input("Enter the netuid: "))
     target_price = float(input("Enter the target price: "))
 
-    dest_hotkey = NETUID_TO_ADDRESS.get(netuid, ROUND_TABLE_HOTKEY)
+    # dest_hotkey = NETUID_TO_ADDRESS.get(netuid, ROUND_TABLE_HOTKEY)
+    dest_hotkey = "5E2LP6EnZ54m3wS8s1yPvD5c3xo71kQroBw7aUVK32TKeZ5u"
     
     leo_proxy = LeoProxy(
       proxy_wallet=wallet,

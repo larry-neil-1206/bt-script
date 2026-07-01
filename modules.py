@@ -493,7 +493,7 @@ class LeoProxy:
         stake = bt.Balance.from_rao(result["stake"]).set_unit(netuid)
         return stake
     
-    def add_stake(self, netuid: int, hotkey: str, amount: Balance, tolerance: float = 0.01) -> None:
+    def add_stake(self, netuid: int, hotkey: str, amount: Balance, use_mev: bool = True, tolerance: float = 0.01) -> None:
         """
         Add stake to a subnet.
         
@@ -501,6 +501,7 @@ class LeoProxy:
             netuid: Network/subnet ID
             hotkey: Hotkey address
             amount: Amount to stake
+            use_mev: Whether to use MEV
             tolerance: Tolerance for stake amount
         """
         free_balance = self.subtensor.get_balance(
@@ -538,7 +539,8 @@ class LeoProxy:
                 "allow_partial": False,
             }
         )
-        is_success, error_message = self._do_proxy_call(call, 'Staking')
+        is_success, error_message = self._do_proxy_call(call, 'Staking') if use_mev else self._do_proxy_call_without_mev(call, 'Staking')
+            
         if is_success:
             new_free_balance = self.subtensor.get_balance(
                 address=self.delegator,
@@ -554,7 +556,7 @@ class LeoProxy:
             print(f"Error: {error_message}")
 
     def remove_stake(self, netuid: int, hotkey: str, amount: Balance,
-                    all: bool = False, tolerance: float = 0.05) -> None:
+                    all: bool = False, use_mev: bool = True, tolerance: float = 0.05) -> None:
         """
         Remove stake from a subnet.
         
@@ -628,7 +630,7 @@ class LeoProxy:
                 "allow_partial": False,
             }
         )
-        is_success, error_message = self._do_proxy_call(call, 'Staking')
+        is_success, error_message = self._do_proxy_call(call, 'Staking') if use_mev else self._do_proxy_call_without_mev(call, 'Staking')
         if is_success:
             free_new_balance = self.subtensor.get_balance(
                 address=self.delegator,
@@ -845,6 +847,76 @@ class LeoProxy:
                     wait_for_finalization=False,
                     wait_for_revealed_execution=False,
                 )
+
+            except Exception as e:
+                exception[0] = e
+        
+        thread = threading.Thread(target=submit_with_timeout, daemon=True)
+        thread.start()
+        thread.join(timeout=timeout)
+        
+        if thread.is_alive():
+            print(f"Timeout: submit_extrinsic exceeded {timeout} seconds")
+            return False, f"Timeout: Transaction submission took longer than {timeout} seconds"
+        
+        if exception[0] is not None:
+            e = exception[0]
+            print(f"SubstrateRequestException: {e}")
+            if isinstance(e, SubstrateRequestException) and "Custom error: 8" in str(e):
+                error_message = f"""
+                    Price exceeded tolerance limit.
+                    Transaction rejected because partial unstaking is disabled.
+                    Either increase price tolerance or enable partial unstaking.
+                """
+            return False, "SubstrateRequestException Error occurred"
+        
+        if receipt[0] is None:
+            return False, "No receipt received from transaction"
+        
+        print(f"Extrinsic: {receipt[0].get_extrinsic_identifier()}")
+        
+        is_success = receipt[0].is_success
+        error_message = receipt[0].error_message
+        return is_success, error_message
+    
+    def _do_proxy_call_without_mev(self, call, proxy_type, timeout: int = 12) -> tuple[bool, str]:
+        proxy_call = self.substrate.compose_call(
+            call_module='Proxy',
+            call_function='proxy',
+            call_params={
+                'real': self.delegator,
+                'force_proxy_type': proxy_type,
+                'call': call,
+            }
+        )
+        print("proxy_call_step1")
+        extrinsic = self.substrate.create_signed_extrinsic(
+            call=proxy_call,
+            keypair=self.proxy_wallet.coldkey,
+            era={"period": 1},
+        )
+        print("proxy_call_step2")
+        
+        receipt = [None]
+        exception = [None]
+        
+        def submit_with_timeout():
+            try:
+                receipt[0] = self.substrate.submit_extrinsic(
+                    extrinsic,
+                    wait_for_inclusion=True,
+                    wait_for_finalization=False,
+                )
+                # receipt[0] = submit_encrypted_extrinsic(
+                #     subtensor=self.subtensor,
+                #     wallet=self.proxy_wallet,
+                #     call=proxy_call,
+                #     period=None,
+                #     raise_error=False,
+                #     wait_for_inclusion=True,
+                #     wait_for_finalization=False,
+                #     wait_for_revealed_execution=False,
+                # )
 
             except Exception as e:
                 exception[0] = e

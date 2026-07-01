@@ -11,9 +11,9 @@ if __name__ == '__main__':
     wallet.unlock_coldkey()
     
     subtensor.unstake(
-        hotkey_ss58='5Gq2gs4ft5dhhjbHabvVbAhjMCV2RgKmVJKAFCUWiirbRT21',
+        hotkey_ss58='5GW2HAdmcbSR6p2QECmcVa7Rccyjm7WeAxN7EsWYvNN7kvv4',
         netuid=0,
-        amount=bt.Balance.from_tao(1),
+        amount=bt.Balance.from_tao(0.5),
         wallet=wallet
     )
-    print(f"Unstaked from 5Gq2gs4ft5dhhjbHabvVbAhjMCV2RgKmVJKAFCUWiirbRT21 on netuid {0}")
+    print(f"Unstaked from 5GW2HAdmcbSR6p2QECmcVa7Rccyjm7WeAxN7EsWYvNN7kvv4 on netuid {0}")
