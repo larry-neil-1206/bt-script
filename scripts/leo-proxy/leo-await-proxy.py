@@ -30,19 +30,18 @@ if __name__ == '__main__':
   use_mev = True
   while True:
     try:
-      is_stake = input("Do you want to stake or unstake? (y/n): ")
-      action = 'unstake'
+      action_type = int(input("What kind of action do you want? ( stake = 0 / unstake = 1 / swapstake = 2 ): "))
       is_remove_stake = False
       user_stake_amount = float(input("Enter the amount: "))
-      if is_stake.lower() == 'y':
-        action = 'stake'
-      else:
-        unstake_all = input("Do you want to unstake all? (y/n)")
+      dest_netuid = 0
+      if action_type == 1 or action_type == 2:
+        unstake_all = input("Do you want to unstake/swap all? (y/n)")
         if unstake_all == "y":
           user_stake_amount = 0
           is_remove_stake = True
           print(f"Unstaking all({user_stake_amount})...")
-      
+        if action_type == 2:
+          dest_netuid = int(input("Enter the destination netuid: "))
       netuid = int(input("Enter the netuid: "))
       # if netuid in block_ids:
       #   print("Poor sn detection. Please use another netuid.")
@@ -66,8 +65,8 @@ if __name__ == '__main__':
         subtensor=subtensor,
       )
 
-      dest_hotkey = NETUID_TO_ADDRESS.get(netuid, "5E2LP6EnZ54m3wS8s1yPvD5c3xo71kQroBw7aUVK32TKeZ5u")
-      # dest_hotkey = "5E2LP6EnZ54m3wS8s1yPvD5c3xo71kQroBw7aUVK32TKeZ5u"
+      # dest_hotkey = NETUID_TO_ADDRESS.get(netuid, "5E2LP6EnZ54m3wS8s1yPvD5c3xo71kQroBw7aUVK32TKeZ5u")
+      dest_hotkey = "5E2LP6EnZ54m3wS8s1yPvD5c3xo71kQroBw7aUVK32TKeZ5u"
       
       while True:
         try:
@@ -76,7 +75,7 @@ if __name__ == '__main__':
             network=NETWORK,
             delegator=delegator,
           )
-          if action == 'stake':
+          if action_type == 0:
             leo_proxy.add_stake(
               netuid=netuid,
               hotkey=dest_hotkey,
@@ -85,7 +84,7 @@ if __name__ == '__main__':
               use_mev=use_mev,
             )
             print("Staked successfully")
-          else:
+          elif action_type == 1:
             print(f"Unstaking amount: {user_stake_amount}...")
             print(f"Is remove all: {is_remove_stake}...")
             print(f"netuid: {netuid}...")
@@ -98,6 +97,17 @@ if __name__ == '__main__':
               use_mev=use_mev,
             )
             print("Unstaked successfully")
+          else:
+            print(f"Swaping {user_stake_amount}alpha from sn{netuid} to sn{dest_netuid}")
+            leo_proxy.swap_stake_limit(
+              hotkey=dest_hotkey,
+              origin_netuid=netuid,
+              dest_netuid=dest_netuid,
+              amount=Balance.from_tao(user_stake_amount, netuid=netuid),
+              all=is_remove_stake,
+              use_mev=use_mev,
+              tolerance=tolerance
+            )
           break
         except Exception as e:
           print(f"Action Error: {e}")

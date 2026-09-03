@@ -695,11 +695,11 @@ class LeoProxy:
             netuid=origin_netuid,
         )
         print(f"Current alpha balance on netuid {origin_netuid}: {balance}")
-            
+
         if amount.rao > balance.rao:
             print(f"Error: Amount to swap is greater than current balance")
             return
-        
+
         call = self.substrate.compose_call(
             call_module='SubtensorModule',
             call_function='swap_stake',
@@ -715,8 +715,102 @@ class LeoProxy:
             print(f"Stake swapped successfully")
         else:
             print(f"Error: {error_message}")
-            
-            
+
+    def swap_stake_limit(self, hotkey: str, origin_netuid: int, dest_netuid: int,
+                amount: Balance, all: bool = False, use_mev: bool = True,
+                tolerance: float = 0.005, allow_partial: bool = False) -> None:
+        """
+        Swap stake between subnets with price protection (safe swapping).
+
+        The limit price is the swap rate (origin alpha price / destination alpha price)
+        expressed in RAO per one alpha, and acts as a floor: the chain rejects the swap
+        with SlippageTooHigh if the executed rate would fall below it.
+
+        Args:
+            hotkey: Hotkey address
+            origin_netuid: Source subnet ID
+            dest_netuid: Destination subnet ID
+            amount: Amount of origin alpha to swap (if not using --all)
+            all: Whether to swap all available balance
+            use_mev: Whether to use MEV
+            tolerance: Accepted drop in the swap rate (0.005 = 0.5%)
+            allow_partial: Whether to allow partial execution instead of fill-or-kill
+        """
+        if origin_netuid == dest_netuid:
+            print(f"Error: origin and destination netuid are the same")
+            return
+
+        balance = self.get_stake(
+            coldkey_ss58=self.delegator,
+            hotkey_ss58=hotkey,
+            netuid=origin_netuid,
+        )
+        dest_balance = self.get_stake(
+            coldkey_ss58=self.delegator,
+            hotkey_ss58=hotkey,
+            netuid=dest_netuid,
+        )
+        print("--------------------------------")
+        print(f"Swapping stake with limit price...")
+        print(f"Tolerance set to: {tolerance}")
+        print(f"Current alpha balance on netuid {origin_netuid}: {balance}")
+        print(f"Current alpha balance on netuid {dest_netuid}: {dest_balance}")
+
+        if all:
+            amount = balance
+        if amount.rao > balance.rao:
+            print(f"Error: Amount to swap is greater than current balance")
+            return
+
+        origin_subnet_info = self.subtensor.subnet(origin_netuid)
+        if not origin_subnet_info:
+            print(f"Subnet with netuid {origin_netuid} does not exist")
+            return
+        dest_subnet_info = self.subtensor.subnet(dest_netuid)
+        if not dest_subnet_info:
+            print(f"Subnet with netuid {dest_netuid} does not exist")
+            return
+
+        origin_price = origin_subnet_info.price.tao if origin_subnet_info.is_dynamic else 1
+        dest_price = dest_subnet_info.price.tao if dest_subnet_info.is_dynamic else 1
+        rate = origin_price / (dest_price or 1)
+        # rate_with_tolerance = rate * (1 - tolerance)  # Actual floor rate to pass to extrinsic
+        # limit_price = Balance.from_tao(rate_with_tolerance).rao
+        price_with_tolerance = dest_subnet_info.price.rao * (
+            1 + tolerance
+        )
+
+        print(f"Current swap rate: {rate:.4f}")
+        print(f"price_with_tolerance: {price_with_tolerance:.4f}")
+
+        call = self.substrate.compose_call(
+            call_module='SubtensorModule',
+            call_function='swap_stake_limit',
+            call_params={
+                'hotkey': hotkey,
+                'origin_netuid': origin_netuid,
+                'destination_netuid': dest_netuid,
+                'alpha_amount': amount.rao,
+                'limit_price': price_with_tolerance,
+                'allow_partial': allow_partial,
+            }
+        )
+        is_success, error_message = self._do_proxy_call(call, 'Staking') if use_mev else self._do_proxy_call_without_mev(call, 'Staking')
+        if is_success:
+            new_dest_balance = self.get_stake(
+                coldkey_ss58=self.delegator,
+                hotkey_ss58=hotkey,
+                netuid=dest_netuid,
+            )
+            if new_dest_balance.rao > dest_balance.rao:
+                print(f"Stake swapped successfully, alpha balance on netuid {dest_netuid} changed from {dest_balance.rao} to {new_dest_balance.rao}")
+                return
+            else:
+                print(f"Stake swap failed")
+        else:
+            print(f"Error: {error_message}")
+
+
     def burned_register(self, hotkey: str, netuid: int) -> None:
         """
         Do burned register.

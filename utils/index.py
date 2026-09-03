@@ -176,9 +176,7 @@ def sim_swap(
             method="sim_swap_tao_for_alpha",
             params=[destination_netuid, amount]
         )
-        decoded = query.decode()
-
-        return decoded
+        return query
     elif destination_netuid == 0:
         amount = int(amount * TAO_TO_RAO)
         query = subtensor.substrate.runtime_call(
@@ -186,8 +184,7 @@ def sim_swap(
             method="sim_swap_alpha_for_tao",
             params=[origin_netuid, amount]
         )
-        decoded = query.decode()
-        return decoded
+        return query
     else:
         raise ValueError("Invalid netuid")
 

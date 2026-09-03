@@ -29,11 +29,16 @@ wallet_numbers = {}
 
 def load_private_wallets(wallet_owners_dict: dict):
     """Inline from modules.load_privatre_wallets."""
-    wallet_owners_dict["5GkZb6S3PSv6stahzWXgMg2PAe8CxEYSp3PXWPJybhLt1xiF"] = "Jeeter"
-    wallet_owners_dict["5FLQ2m1ZgVd2qXfE4ZXtxyuqmjjJHycKqFEWvExCiNzUtEEe"] = "Jeeter"
-    wallet_owners_dict["5FnWKpesLZj1ZknKJZ6bzF3VucRxgD7VE4MFVDkh3WDbeUbL"] = "Jeeter"
-    wallet_owners_dict["5HkGCkce7aKxinYtU588kjt7sy2HKrKgKyhbNoe13kvrPFT2"] = "Jeeter"
-    wallet_owners_dict["5Esb8sm8ydWg9ozmwx3bYBbq8AwTnZT9P6vfnPYi58Gnvg6r"] = "Alchemist"
+    wallet_owners_dict["5GkZb6S3PSv6stahzWXgMg2PAe8CxEYSp3PXWPJybhLt1xiF"] = "mcc"
+    wallet_owners_dict["5FLQ2m1ZgVd2qXfE4ZXtxyuqmjjJHycKqFEWvExCiNzUtEEe"] = "mdd"
+    wallet_owners_dict["5FnWKpesLZj1ZknKJZ6bzF3VucRxgD7VE4MFVDkh3WDbeUbL"] = "mee"
+    wallet_owners_dict["5HkGCkce7aKxinYtU588kjt7sy2HKrKgKyhbNoe13kvrPFT2"] = "maa"
+
+    wallet_owners_dict["5DXumvGFoxvmjbm4WMugm7b4d6Z75raVCyoXGLNiCKNDM6gZ"] = "103_miner1"
+    wallet_owners_dict["5GE3aqhhhnwstZFnu9cvYQM7pqKcVcodZTsnqE7gwVpTyoQg"] = "103_miner2"
+    wallet_owners_dict["5GuoiRRrZzYe37tL7xM9fxM8xayjCokf4av7CqkSjvF6uMuc"] = "103_miner3"
+    wallet_owners_dict["5GF99foU1NVbePhMsJZpnrjh5rsSeJBiY7yvZg52uAUpGG57"] = "103_miner4"
+    wallet_owners_dict["5H9MLWiMWbNUNJsx7Lr9xtNsjS2vuR8581NA57KbMiFoZjxU"] = "103_miner5"
 
 
 def get_total_value(subtensor_obj, wallet_ss58, subnet_infos, current_netuid, cache, balance, stake_infos):
@@ -82,20 +87,7 @@ def get_total_value(subtensor_obj, wallet_ss58, subnet_infos, current_netuid, ca
 
 
 def get_stake_info_for_coldkeys_custom(subtensor_obj, coldkeys):
-    result = subtensor_obj.substrate.runtime_call(
-        api="StakeInfoRuntimeApi",
-        method="get_stake_info_for_coldkeys",
-        params=[coldkeys],
-    )
-    query = result.value
-
-    if query is None:
-        return {}
-
-    return {
-        bt.core.chain_data.decode_account_id(ck): bt.core.chain_data.StakeInfo.list_from_dicts(st_info)
-        for ck, st_info in query
-    }
+    return subtensor_obj.get_stake_info_for_coldkeys(coldkeys)
 
 
 def load_bots_from_gdoc():
